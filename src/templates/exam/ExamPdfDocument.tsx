@@ -5,10 +5,10 @@ import type { PaperMetadata, Question } from '../../types/paper'
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 48,
-    paddingBottom: 40,
-    paddingLeft: 64,
-    paddingRight: 40,
+    paddingTop: 72,
+    paddingBottom: 72,
+    paddingLeft: 72,
+    paddingRight: 72,
     fontSize: 12,
     fontFamily: 'Times-Roman',
   },

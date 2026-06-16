@@ -1,5 +1,6 @@
 import React from 'react'
 import { formatExamTitle, formatSetLabel, mcqOptionLabel } from '../../lib/documentFormat'
+import MathText from '../../lib/math.tsx'
 import type { PaperMetadata, Question } from '../../types/paper'
 
 export function ExamDocumentHeader({ metadata }: { metadata: Partial<PaperMetadata> }) {
@@ -46,7 +47,8 @@ export function ExamQuestionsBody({ questions }: { questions: Question[] }) {
         <div key={q.id || idx} className="doc-question-block">
           <div className="question-item">
             <div className="q-text">
-              <strong>{idx + 1}.</strong> {q.question_text || '…'}
+              <strong>{idx + 1}.</strong>{' '}
+              {q.question_text ? <MathText text={q.question_text} /> : '…'}
               {q.marks ? <span className="q-marks"> [{q.marks}]</span> : null}
             </div>
           </div>
@@ -56,7 +58,7 @@ export function ExamQuestionsBody({ questions }: { questions: Question[] }) {
                 opt.trim() || q.options!.length <= 4 ? (
                   <li key={oi} className="mcq-option-item">
                     <span className="mcq-option-label">({mcqOptionLabel(oi)})</span>
-                    <span>{opt || '………………'}</span>
+                    <span>{opt ? <MathText text={opt} /> : '………………'}</span>
                   </li>
                 ) : null
               )}
