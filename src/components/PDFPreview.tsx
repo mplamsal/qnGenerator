@@ -1,22 +1,37 @@
-import React from 'react'
-import { PDFDownloadLink } from '@react-pdf/renderer'
+import React, { useCallback, useState } from 'react'
 import { pdfFileName } from '../lib/documentFormat'
+import { createPdfBlob, downloadBlobAsFile } from '../lib/pdf'
 import type { PaperMetadata, Question } from '../types/paper'
-import { ExamPdfDocument } from './ExamPdfDocument'
+import type { TemplateDefinition } from '../templates/types'
 
-type Props = { metadata?: Partial<PaperMetadata>; questions?: Question[] }
+type Props = {
+  template: TemplateDefinition
+  metadata?: Partial<PaperMetadata>
+  questions?: Question[]
+}
 
-export default function PDFPreview({ metadata = {}, questions = [] }: Props) {
+export default function PDFPreview({ template, metadata = {}, questions = [] }: Props) {
+  const [busy, setBusy] = useState(false)
+  const PdfDocument = template.PdfDocument
+
+  const handleDownload = useCallback(async () => {
+    setBusy(true)
+    try {
+      const blob = await createPdfBlob(
+        <PdfDocument metadata={metadata} questions={questions} />
+      )
+      downloadBlobAsFile(blob, pdfFileName(metadata))
+    } catch (error) {
+      console.error(error)
+      alert('Failed to generate PDF.')
+    } finally {
+      setBusy(false)
+    }
+  }, [metadata, questions, PdfDocument])
+
   return (
-    <PDFDownloadLink
-      document={<ExamPdfDocument metadata={metadata} questions={questions} />}
-      fileName={pdfFileName(metadata)}
-    >
-      {({ loading }) => (
-        <button type="button" className="btn btn-primary">
-          {loading ? 'Preparing…' : 'Download PDF'}
-        </button>
-      )}
-    </PDFDownloadLink>
+    <button type="button" className="btn btn-primary" disabled={busy} onClick={handleDownload}>
+      {busy ? 'Generating…' : 'Download PDF'}
+    </button>
   )
 }

@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ExamDocumentHeader, ExamQuestionsBody } from './ExamDocumentContent'
-import type { PaperMetadata, Question as PaperQuestion } from '../types/paper'
+import type { PaperMetadata, Question } from '../types/paper'
+import type { TemplateDefinition } from '../templates/types'
 
-export const A4_WIDTH = 794
-export const A4_HEIGHT = 1123
+const A4_WIDTH = 794
+const A4_HEIGHT = 1123
 
 const MIN_ZOOM = 0.5
 const MAX_ZOOM = 2
@@ -65,15 +65,18 @@ function A4Frame({
 }
 
 export default function DocumentPreview({
+  template,
   metadata,
   questions,
 }: {
-  metadata: any
-  questions: any[]
+  template: TemplateDefinition
+  metadata?: Partial<PaperMetadata>
+  questions?: Question[]
 }) {
   const [scale, setScale] = useState(0.72)
   const manualZoomRef = useRef(false)
   const viewportSizerRef = useRef<HTMLDivElement>(null)
+  const TemplateContent = template.PreviewComponent
 
   useEffect(() => {
     const el = viewportSizerRef.current
@@ -133,10 +136,7 @@ export default function DocumentPreview({
       </div>
       <div ref={viewportSizerRef} className="a4-viewport-sizer">
         <A4Frame scale={scale}>
-          <ExamDocumentHeader metadata={metadata as Partial<PaperMetadata>} />
-          <div className="doc-body">
-            <ExamQuestionsBody questions={questions as PaperQuestion[]} />
-          </div>
+          <TemplateContent metadata={metadata} questions={questions} />
         </A4Frame>
       </div>
     </>

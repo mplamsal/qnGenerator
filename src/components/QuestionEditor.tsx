@@ -6,13 +6,14 @@ import { mcqOptionLabel } from '../lib/documentFormat'
 type Props = {
   item: Question
   index: number
+  canMoveDown: boolean
   onChange: (q: Question) => void
   onRemove: (id: string) => void
   onMoveUp: (i: number) => void
   onMoveDown: (i: number) => void
 }
 
-export default function QuestionEditor({ item, index, onChange, onRemove, onMoveUp, onMoveDown }: Props) {
+export default function QuestionEditor({ item, index, canMoveDown, onChange, onRemove, onMoveUp, onMoveDown }: Props) {
   const questionRef = useRef<HTMLTextAreaElement>(null)
   const optionRefs = useRef<(HTMLInputElement | null)[]>([])
 
@@ -49,7 +50,7 @@ export default function QuestionEditor({ item, index, onChange, onRemove, onMove
         <span className="q-type-pill">{item.type}</span>
         <div className="q-actions">
           <button type="button" onClick={() => onMoveUp(index)} disabled={index === 0} title="Move up">↑</button>
-          <button type="button" onClick={() => onMoveDown(index)} disabled={index === 0} title="Move down">↓</button>
+          <button type="button" onClick={() => onMoveDown(index)} disabled={!canMoveDown} title="Move down">↓</button>
           <button type="button" className="remove-btn" onClick={() => onRemove(item.id)} title="Remove">✕</button>
         </div>
       </div>
