@@ -1,0 +1,64 @@
+// Prisma schema for main application DB (users, templates, papers, questions, pdf metadata)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model School {
+  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String
+  users User[]
+}
+
+model User {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email    String @unique
+  password String
+  name     String?
+  role     String
+  schoolId String? @db.Uuid
+  school   School? @relation(fields: [schoolId], references: [id])
+  papers   QuestionPaper[] @relation("TeacherPapers")
+}
+
+model Template {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  schoolId  String @db.Uuid
+  name      String
+  configJson Json
+  createdAt DateTime @default(now())
+}
+
+model QuestionPaper {
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId  String @db.Uuid
+  teacher    User @relation("TeacherPapers", fields: [teacherId], references: [id])
+  metadataJson Json?
+  status     String @default("Draft")
+  createdAt  DateTime @default(now())
+  questions  Question[]
+  pdfs       PaperPdf[]
+}
+
+model Question {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paperId     String @db.Uuid
+  paper       QuestionPaper @relation(fields: [paperId], references: [id])
+  type        String
+  questionText String?
+  marks       Int?
+  orderIndex  Int?
+}
+
+model PaperPdf {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paperId   String @db.Uuid
+  paper     QuestionPaper @relation(fields: [paperId], references: [id])
+  path      String?
+  filename  String?
+  data      Bytes?
+  createdAt DateTime @default(now())
+}
