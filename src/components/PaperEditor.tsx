@@ -1,92 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { useStore } from '../store/useStore';
 import { savePaper, updatePaper as localUpdatePaper } from '../lib/localStore';
 import DocumentPreview from './DocumentPreview';
 import PDFPreview from './PDFPreview';
-
-type Question = {
-  id: string;
-  type: 'MCQ' | 'Very Short' | 'Short' | 'Long';
-  question_text: string;
-  marks: number;
-  instructions?: string;
-};
-
-// --- Subcomponent: SortableItem ---
-function SortableItem({
-  item,
-  index,
-  onChange,
-  onRemove,
-  onMoveUp,
-  onMoveDown,
-}: {
-  item: Question;
-  index: number;
-  onChange: (q: Question) => void;
-  onRemove: (id: string) => void;
-  onMoveUp: (i: number) => void;
-  onMoveDown: (i: number) => void;
-}) {
-  return (
-    <div className="question-item-editor">
-      <div className="q-header">
-        <span className="q-number">Q{index + 1}</span>
-        <div className="q-actions">
-          <button onClick={() => onMoveUp(index)} disabled={index === 0}>↑</button>
-          <button onClick={() => onMoveDown(index)} disabled={index === 0}>↓</button>
-          <button className="remove-btn" onClick={() => onRemove(item.id)}>✕</button>
-        </div>
-      </div>
-      <div className="q-body">
-        <div className="q-row">
-          <div className="q-field">
-            <select
-              value={item.type}
-              onChange={(e) => onChange({ ...item, type: e.target.value as any })}
-            >
-              <option>MCQ</option>
-              <option>Very Short</option>
-              <option>Short</option>
-              <option>Long</option>
-            </select>
-          </div>
-          <div className="q-field">
-            <input
-              type="number"
-              value={item.marks}
-              onChange={(e) => onChange({ ...item, marks: Number(e.target.value) })}
-              placeholder="Marks"
-            />
-          </div>
-        </div>
-        <textarea
-          value={item.question_text}
-          onChange={(e) => onChange({ ...item, question_text: e.target.value })}
-          placeholder="Question text"
-        />
-      </div>
-    </div>
-  );
-}
+import TemplateSelector from './TemplateSelector';
+import QuestionEditor from './QuestionEditor';
+import { getTemplateById } from '../templates';
+import { createQuestion, DEFAULT_METADATA, type PaperMetadata, type Question } from '../types/paper';
 
 // --- Main Component ---
 export default function PaperEditor() {
   const user = useStore((s) => s.user);
 
-  const [metadata, setMetadata] = useState({
-    subject: '',
-    grade: '',
-    examType: '',
-    duration: '',
-    fullMarks: '',
-    academicYear: '',
-    schoolName: 'SOS Hermann Gmeiner School, Sanothimi Bhaktapur',
-    includeSet: false,
-    set: '',
-  });
-
+  const [templateId, setTemplateId] = useState('exam');
+  const [metadata, setMetadata] = useState<PaperMetadata>({ ...DEFAULT_METADATA });
   const [questions, setQuestions] = useState<Question[]>([]);
   const [paperId, setPaperId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -128,16 +55,13 @@ export default function PaperEditor() {
   // Init with one empty question
   useEffect(() => {
     if (questions.length === 0) {
-      setQuestions([{ id: uuidv4(), type: 'MCQ', question_text: '', marks: 1 }]);
+      setQuestions([createQuestion('MCQ')]);
     }
   }, []);
 
   // --- Question CRUD ---
   const addQuestion = (type: Question['type'] = 'MCQ') => {
-    setQuestions((qs) => [
-      ...qs,
-      { id: uuidv4(), type, question_text: '', marks: type === 'MCQ' ? 1 : type === 'Very Short' ? 1 : type === 'Short' ? 5 : 10 },
-    ]);
+    setQuestions((qs) => [...qs, createQuestion(type)]);
   };
 
   const removeQuestion = (id: string) => {
@@ -206,6 +130,7 @@ export default function PaperEditor() {
     <div ref={splitPanelRef} className={`split-panel${splitterActive ? ' is-dragging' : ''}`}>
       <div className="panel-left" style={{ flex: `0 0 ${leftWidth}%` }}>
         {/* Metadata Card */}
+        <TemplateSelector value={templateId} onChange={setTemplateId} />
         <div className="card">
           <div className="card-title">📋 Paper Metadata</div>
           <div className="meta-grid">
@@ -297,10 +222,11 @@ export default function PaperEditor() {
           </div>
           <div className="question-list">
             {questions.map((q, idx) => (
-              <SortableItem
+              <QuestionEditor
                 key={q.id}
                 item={q}
                 index={idx}
+                canMoveDown={idx < questions.length - 1}
                 onChange={updateQuestion}
                 onRemove={removeQuestion}
                 onMoveUp={moveUp}
@@ -335,18 +261,9 @@ export default function PaperEditor() {
           <button
             className="btn btn-ghost"
             onClick={() => {
-              setQuestions([{ id: uuidv4(), type: 'MCQ', question_text: '', marks: 1 }]);
-              setMetadata({
-                subject: '',
-                grade: '',
-                examType: '',
-                duration: '',
-                fullMarks: '',
-                academicYear: '',
-                schoolName: 'SOS Hermann Gmeiner School, Sanothimi Bhaktapur',
-                includeSet: false,
-                set: '',
-              });
+              setQuestions([createQuestion('MCQ')]);
+              setMetadata({ ...DEFAULT_METADATA });
+              setTemplateId('exam');
               setPaperId(null);
             }}
           >
@@ -369,14 +286,14 @@ export default function PaperEditor() {
 
       <div className="panel-right">
         <div className="preview-card preview-card-fill">
-          <DocumentPreview metadata={metadata} questions={questions} />
+          <DocumentPreview template={getTemplateById(templateId)} metadata={metadata} questions={questions} />
         </div>
         <div className="preview-card no-print preview-card-compact">
           <div className="preview-toolbar">
             <span>🖨️ PDF Preview</span>
           </div>
           <div className="preview-body preview-body-compact">
-            <PDFPreview metadata={metadata} questions={questions} />
+            <PDFPreview template={getTemplateById(templateId)} metadata={metadata} questions={questions} />
           </div>
         </div>
       </div>
