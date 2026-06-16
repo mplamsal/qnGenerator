@@ -1,51 +1,30 @@
-import React, { useEffect, useState } from 'react'
-import PaperEditor from '../components/PaperEditor'
-import { useStore } from '../store/useStore'
-import { listPapers } from '../lib/localStore'
+import React from 'react';
+import PaperEditor from '../components/PaperEditor';
 
-export default function TeacherDashboard(){
-  const user = useStore(s=>s.user)
-  const [papers, setPapers] = useState<any[]>([])
-
-  useEffect(()=>{
-    if(!user) return
-    const papers = listPapers()
-    setPapers(papers)
-  },[user])
-
+export default function TeacherDashboard() {
   return (
-    <div className="p-6 container">
-      <header className="header">
-        <h2>Teacher Dashboard</h2>
-      </header>
-      <main>
-        <section className="mb-4">
-          <h3 className="mb-2">Create / Edit Paper</h3>
-          <PaperEditor />
-        </section>
-
-        <section>
-          <h3 className="mb-2">Previous Papers</h3>
-          <div className="card">
-            {papers.length===0 ? <p className="muted">No papers yet.</p> : (
-              <ul>
-                {papers.map(p=> (
-                  <li key={p.id} className="list-item">
-                    <div>
-                      <div style={{fontWeight:600}}>{p.metadata_json?.subject || 'Untitled'}</div>
-                      <div className="muted">{p.status} • {new Date(p.created_at).toLocaleString()}</div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="btn btn-primary">Preview</button>
-                      <button className="btn btn-success">Edit</button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+    <div className="app-layout">
+      <header className="app-header">
+        <div className="brand">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            <line x1="10" y1="8" x2="16" y2="8" />
+            <line x1="10" y1="12" x2="16" y2="12" />
+            <line x1="10" y1="16" x2="13" y2="16" />
+          </svg>
+          <span>ExamForge</span>
+        </div>
+        <div className="header-actions">
+          <div className="user-badge">
+            <span className="avatar">T</span>
+            <span className="name">Teacher</span>
           </div>
-        </section>
-      </main>
+          <button className="btn btn-ghost btn-sm">Sign out</button>
+        </div>
+      </header>
+
+      <PaperEditor />
     </div>
-  )
+  );
 }

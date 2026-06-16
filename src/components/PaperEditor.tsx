@@ -1,161 +1,385 @@
-import React, { useEffect, useState } from 'react'
-import PDFPreview from './PDFPreview'
-import DocumentPreview from './DocumentPreview'
-import { v4 as uuidv4 } from 'uuid'
-import { useStore } from '../store/useStore'
-import { savePaper, updatePaper as localUpdatePaper } from '../lib/localStore'
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { useStore } from '../store/useStore';
+import { savePaper, updatePaper as localUpdatePaper } from '../lib/localStore';
+import DocumentPreview from './DocumentPreview';
+import PDFPreview from './PDFPreview';
 
 type Question = {
-  id: string
-  type: 'MCQ'|'Very Short'|'Short'|'Long'
-  question_text: string
-  marks: number
-  instructions?: string
-}
+  id: string;
+  type: 'MCQ' | 'Very Short' | 'Short' | 'Long';
+  question_text: string;
+  marks: number;
+  instructions?: string;
+};
 
-function SortableItem({item, index, onChange, onRemove, onMoveUp, onMoveDown}:{item: Question; index:number; onChange:(q:Question)=>void; onRemove:(id:string)=>void; onMoveUp:(i:number)=>void; onMoveDown:(i:number)=>void}){
+// --- Subcomponent: SortableItem ---
+function SortableItem({
+  item,
+  index,
+  onChange,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+}: {
+  item: Question;
+  index: number;
+  onChange: (q: Question) => void;
+  onRemove: (id: string) => void;
+  onMoveUp: (i: number) => void;
+  onMoveDown: (i: number) => void;
+}) {
   return (
-    <div className="p-3 border rounded mb-2 bg-white">
-      <div className="flex items-center justify-between mb-2">
-        <strong>Q {index+1}</strong>
-        <div className="flex gap-2">
-          <button onClick={()=>onMoveUp(index)} className="px-2 py-1 bg-gray-100 rounded">Up</button>
-          <button onClick={()=>onMoveDown(index)} className="px-2 py-1 bg-gray-100 rounded">Down</button>
-          <button onClick={()=>onRemove(item.id)} className="px-2 py-1 bg-red-100 rounded">Remove</button>
+    <div className="question-item-editor">
+      <div className="q-header">
+        <span className="q-number">Q{index + 1}</span>
+        <div className="q-actions">
+          <button onClick={() => onMoveUp(index)} disabled={index === 0}>↑</button>
+          <button onClick={() => onMoveDown(index)} disabled={index === 0}>↓</button>
+          <button className="remove-btn" onClick={() => onRemove(item.id)}>✕</button>
         </div>
       </div>
-      <select value={item.type} onChange={e=>onChange({...item, type: e.target.value as any})} className="mb-2 w-full p-2 border rounded">
-        <option>MCQ</option>
-        <option>Very Short</option>
-        <option>Short</option>
-        <option>Long</option>
-      </select>
-      <textarea value={item.question_text} onChange={e=>onChange({...item, question_text: e.target.value})} placeholder="Question text" className="w-full p-2 border rounded mb-2" />
-      <input type="number" value={item.marks} onChange={e=>onChange({...item, marks: Number(e.target.value)})} className="w-full p-2 border rounded" />
+      <div className="q-body">
+        <div className="q-row">
+          <div className="q-field">
+            <select
+              value={item.type}
+              onChange={(e) => onChange({ ...item, type: e.target.value as any })}
+            >
+              <option>MCQ</option>
+              <option>Very Short</option>
+              <option>Short</option>
+              <option>Long</option>
+            </select>
+          </div>
+          <div className="q-field">
+            <input
+              type="number"
+              value={item.marks}
+              onChange={(e) => onChange({ ...item, marks: Number(e.target.value) })}
+              placeholder="Marks"
+            />
+          </div>
+        </div>
+        <textarea
+          value={item.question_text}
+          onChange={(e) => onChange({ ...item, question_text: e.target.value })}
+          placeholder="Question text"
+        />
+      </div>
     </div>
-  )
+  );
 }
 
-export default function PaperEditor(){
-  const user = useStore(s=>s.user)
-  const [metadata, setMetadata] = useState({subject:'', grade:'', examType:'', duration:'', fullMarks:'', academicYear:''})
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [saving, setSaving] = useState(false)
-  const [paperId, setPaperId] = useState<string | null>(null)
+// --- Main Component ---
+export default function PaperEditor() {
+  const user = useStore((s) => s.user);
 
-  useEffect(()=>{
-    // init with one question
-    if(questions.length===0) setQuestions([{id: uuidv4(), type: 'MCQ', question_text: '', marks: 1}])
-  },[])
+  const [metadata, setMetadata] = useState({
+    subject: '',
+    grade: '',
+    examType: '',
+    duration: '',
+    fullMarks: '',
+    academicYear: '',
+    schoolName: 'SOS Hermann Gmeiner School, Sanothimi Bhaktapur',
+    includeSet: false,
+    set: '',
+  });
 
-  function addQuestion(){
-    setQuestions(qs=>[...qs, {id: uuidv4(), type: 'MCQ', question_text: '', marks: 1}])
-  }
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [paperId, setPaperId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [leftWidth, setLeftWidth] = useState(50);
+  const [splitterActive, setSplitterActive] = useState(false);
+  const splitPanelRef = useRef<HTMLDivElement>(null);
 
-  function removeQuestion(id:string){
-    setQuestions(qs=>qs.filter(q=>q.id!==id))
-  }
+  const handleSplitterMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setSplitterActive(true);
+  }, []);
 
-  function updateQuestion(updated:Question){
-    setQuestions(qs=>qs.map(q=> q.id===updated.id ? updated : q))
-  }
+  useEffect(() => {
+    if (!splitterActive) return;
 
-  async function handleSaveDraft(){
-    if(!user) return alert('Not signed in')
-    setSaving(true)
-    try{
-      const meta = metadata
-      if(!paperId){
-        const created = savePaper({ metadata: meta, questions })
-        setPaperId(created.id)
+    const onMove = (e: MouseEvent) => {
+      const panel = splitPanelRef.current;
+      if (!panel) return;
+      const rect = panel.getBoundingClientRect();
+      const pct = ((e.clientX - rect.left) / rect.width) * 100;
+      setLeftWidth(Math.min(78, Math.max(22, pct)));
+    };
+
+    const onUp = () => setSplitterActive(false);
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [splitterActive]);
+
+  // Init with one empty question
+  useEffect(() => {
+    if (questions.length === 0) {
+      setQuestions([{ id: uuidv4(), type: 'MCQ', question_text: '', marks: 1 }]);
+    }
+  }, []);
+
+  // --- Question CRUD ---
+  const addQuestion = (type: Question['type'] = 'MCQ') => {
+    setQuestions((qs) => [
+      ...qs,
+      { id: uuidv4(), type, question_text: '', marks: type === 'MCQ' ? 1 : type === 'Very Short' ? 1 : type === 'Short' ? 5 : 10 },
+    ]);
+  };
+
+  const removeQuestion = (id: string) => {
+    if (questions.length <= 1) return alert('Must have at least one question.');
+    setQuestions((qs) => qs.filter((q) => q.id !== id));
+  };
+
+  const updateQuestion = (updated: Question) => {
+    setQuestions((qs) => qs.map((q) => (q.id === updated.id ? updated : q)));
+  };
+
+  const moveUp = (i: number) => {
+    if (i <= 0) return;
+    setQuestions((items) => {
+      const copy = [...items];
+      [copy[i - 1], copy[i]] = [copy[i], copy[i - 1]];
+      return copy;
+    });
+  };
+
+  const moveDown = (i: number) => {
+    setQuestions((items) => {
+      if (i >= items.length - 1) return items;
+      const copy = [...items];
+      [copy[i], copy[i + 1]] = [copy[i + 1], copy[i]];
+      return copy;
+    });
+  };
+
+  // --- Save / Submit ---
+  const handleSaveDraft = async () => {
+    if (!user) return alert('Not signed in');
+    setSaving(true);
+    try {
+      const meta = metadata;
+      if (!paperId) {
+        const created = savePaper({ metadata: meta, questions });
+        setPaperId(created.id);
       } else {
-        localUpdatePaper(paperId, { metadata: meta, questions })
+        localUpdatePaper(paperId, { metadata: meta, questions });
       }
-      alert('Saved draft')
-    }catch(err:any){
-      console.error(err)
-      alert(err.message || 'Save failed')
-    }finally{ setSaving(false) }
-  }
-
-  async function handleSubmit(){
-    if(!paperId){
-      await handleSaveDraft()
+      alert('Draft saved');
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Save failed');
+    } finally {
+      setSaving(false);
     }
-    if(!paperId) return
-    try{
-      localUpdatePaper(paperId, { status: 'Submitted' })
-      alert('Submitted for review')
-    }catch(err:any){
-      alert(err.message || 'Submit failed')
+  };
+
+  const handleSubmit = async () => {
+    if (!paperId) {
+      await handleSaveDraft();
     }
-  }
+    if (!paperId) return;
+    try {
+      localUpdatePaper(paperId, { status: 'Submitted' });
+      alert('Submitted for review');
+    } catch (err: any) {
+      alert(err.message || 'Submit failed');
+    }
+  };
 
-  function moveUp(i:number){
-    if(i<=0) return
-    setQuestions(items=>{
-      const copy = [...items]
-      const tmp = copy[i-1]
-      copy[i-1] = copy[i]
-      copy[i] = tmp
-      return copy
-    })
-  }
-  function moveDown(i:number){
-    setQuestions(items=>{
-      if(i>=items.length-1) return items
-      const copy = [...items]
-      const tmp = copy[i+1]
-      copy[i+1] = copy[i]
-      copy[i] = tmp
-      return copy
-    })
-  }
-
+  // --- Render ---
   return (
-    <div className="grid grid-cols-3 container">
-      <section className="card">
-        <h3 className="mb-2">Preview</h3>
-        <DocumentPreview metadata={{ ...metadata, schoolName: 'SOS Hermann Gmeiner School, Sanothimi Bhaktapur' }} questions={questions} />
-        <div style={{marginTop:12}}>
-          <PDFPreview metadata={{ ...metadata, schoolName: 'SOS Hermann Gmeiner School, Sanothimi Bhaktapur' }} questions={questions} />
+    <div ref={splitPanelRef} className={`split-panel${splitterActive ? ' is-dragging' : ''}`}>
+      <div className="panel-left" style={{ flex: `0 0 ${leftWidth}%` }}>
+        {/* Metadata Card */}
+        <div className="card">
+          <div className="card-title">📋 Paper Metadata</div>
+          <div className="meta-grid">
+            <div className="input-group">
+              <label>Subject</label>
+              <input
+                type="text"
+                value={metadata.subject}
+                onChange={(e) => setMetadata((m) => ({ ...m, subject: e.target.value }))}
+                placeholder="e.g. Mathematics"
+              />
+            </div>
+            <div className="input-group">
+              <label>Grade / Class</label>
+              <input
+                type="text"
+                value={metadata.grade}
+                onChange={(e) => setMetadata((m) => ({ ...m, grade: e.target.value }))}
+                placeholder="e.g. Grade 10"
+              />
+            </div>
+            <div className="input-group">
+              <label>Exam Type</label>
+              <input
+                type="text"
+                value={metadata.examType}
+                onChange={(e) => setMetadata((m) => ({ ...m, examType: e.target.value }))}
+                placeholder="e.g. Final"
+              />
+            </div>
+            <div className="input-group">
+              <label>Duration</label>
+              <input
+                type="text"
+                value={metadata.duration}
+                onChange={(e) => setMetadata((m) => ({ ...m, duration: e.target.value }))}
+                placeholder="e.g. 3 hours"
+              />
+            </div>
+            <div className="input-group">
+              <label>Full Marks</label>
+              <input
+                type="text"
+                value={metadata.fullMarks}
+                onChange={(e) => setMetadata((m) => ({ ...m, fullMarks: e.target.value }))}
+                placeholder="e.g. 100"
+              />
+            </div>
+            <div className="input-group">
+              <label>Academic Year</label>
+              <input
+                type="text"
+                value={metadata.academicYear}
+                onChange={(e) => setMetadata((m) => ({ ...m, academicYear: e.target.value }))}
+                placeholder="e.g. 2025"
+              />
+            </div>
+            <div className="input-group">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="checkbox"
+                  checked={metadata.includeSet}
+                  onChange={(e) =>
+                    setMetadata((m) => ({
+                      ...m,
+                      includeSet: e.target.checked,
+                      set: e.target.checked ? m.set : '',
+                    }))
+                  }
+                />
+                Include Set
+              </label>
+              <input
+                type="text"
+                value={metadata.set}
+                onChange={(e) => setMetadata((m) => ({ ...m, set: e.target.value }))}
+                placeholder="e.g. A"
+                disabled={!metadata.includeSet}
+              />
+            </div>
+          </div>
         </div>
-      </section>
 
-
-      <div>
-
-      <section className="card">
-        <h3 className="mb-2">Questions</h3>
-        <div>
-          {questions.map((q, idx)=> (
-            <SortableItem key={q.id} item={q} index={idx} onChange={updateQuestion} onRemove={removeQuestion} onMoveUp={moveUp} onMoveDown={moveDown} />
-          ))}
+        {/* Questions Card */}
+        <div className="card">
+          <div className="card-title">
+            📝 Questions
+            <span className="badge">{questions.length}</span>
+          </div>
+          <div className="question-list">
+            {questions.map((q, idx) => (
+              <SortableItem
+                key={q.id}
+                item={q}
+                index={idx}
+                onChange={updateQuestion}
+                onRemove={removeQuestion}
+                onMoveUp={moveUp}
+                onMoveDown={moveDown}
+              />
+            ))}
+          </div>
+          <div className="add-question-area">
+            <button className="btn btn-outline-primary btn-sm" onClick={() => addQuestion('MCQ')}>
+              + MCQ
+            </button>
+            <button className="btn btn-outline-primary btn-sm" onClick={() => addQuestion('Very Short')}>
+              + Very Short
+            </button>
+            <button className="btn btn-outline-primary btn-sm" onClick={() => addQuestion('Short')}>
+              + Short
+            </button>
+            <button className="btn btn-outline-primary btn-sm" onClick={() => addQuestion('Long')}>
+              + Long
+            </button>
+          </div>
         </div>
-        <div className="mt-2">
-          <button onClick={addQuestion} className="btn btn-primary">Add Question</button>
+
+        {/* Actions */}
+        <div className="card no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: 0 }}>
+          <button className="btn btn-primary" onClick={handleSaveDraft} disabled={saving}>
+            {saving ? 'Saving...' : '💾 Save Draft'}
+          </button>
+          <button className="btn btn-success" onClick={handleSubmit}>
+            📤 Submit
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={() => {
+              setQuestions([{ id: uuidv4(), type: 'MCQ', question_text: '', marks: 1 }]);
+              setMetadata({
+                subject: '',
+                grade: '',
+                examType: '',
+                duration: '',
+                fullMarks: '',
+                academicYear: '',
+                schoolName: 'SOS Hermann Gmeiner School, Sanothimi Bhaktapur',
+                includeSet: false,
+                set: '',
+              });
+              setPaperId(null);
+            }}
+          >
+            ↺ Reset
+          </button>
         </div>
-      </section>
+      </div>
 
-
-        <section className="card">
-        <h3 className="mb-2">Paper Metadata</h3>
-        <div>
-          <input value={metadata.subject} onChange={e=>setMetadata(m=>({...m, subject: e.target.value}))} placeholder="Subject" className="input mb-2" />
-          <input value={metadata.grade} onChange={e=>setMetadata(m=>({...m, grade: e.target.value}))} placeholder="Grade/Class" className="input mb-2" />
-          <input value={metadata.examType} onChange={e=>setMetadata(m=>({...m, examType: e.target.value}))} placeholder="Exam Type" className="input mb-2" />
-          <input value={metadata.duration} onChange={e=>setMetadata(m=>({...m, duration: e.target.value}))} placeholder="Duration" className="input mb-2" />
-          <input value={metadata.fullMarks} onChange={e=>setMetadata(m=>({...m, fullMarks: e.target.value}))} placeholder="Full Marks" className="input mb-2" />
-          <input value={metadata.academicYear} onChange={e=>setMetadata(m=>({...m, academicYear: e.target.value}))} placeholder="Academic Year" className="input mb-2" />
+      <div
+        className={`splitter${splitterActive ? ' active' : ''}`}
+        onMouseDown={handleSplitterMouseDown}
+        role="separator"
+        aria-orientation="vertical"
+        aria-valuenow={Math.round(leftWidth)}
+      >
+        <div className="grip">
+          <span /><span /><span />
         </div>
-        <div className="mt-2" style={{display:'flex', gap:8}}>
-          <button onClick={handleSaveDraft} disabled={saving} className="btn" style={{background:'#1f2937',color:'#fff'}}>{saving? 'Saving...':'Save Draft'}</button>
-          <button onClick={handleSubmit} className="btn btn-success">Submit</button>
+      </div>
+
+      <div className="panel-right">
+        <div className="preview-card preview-card-fill">
+          <DocumentPreview metadata={metadata} questions={questions} />
         </div>
-      </section>
-
-  </div>
-
+        <div className="preview-card no-print preview-card-compact">
+          <div className="preview-toolbar">
+            <span>🖨️ PDF Preview</span>
+          </div>
+          <div className="preview-body preview-body-compact">
+            <PDFPreview metadata={metadata} questions={questions} />
+          </div>
+        </div>
+      </div>
     </div>
-  )
+  );
 }
