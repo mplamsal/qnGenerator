@@ -1,18 +1,32 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { savePaper, updatePaper as localUpdatePaper } from '../lib/localStore';
 import DocumentPreview from './DocumentPreview';
 import PDFPreview from './PDFPreview';
 import TemplateSelector from './TemplateSelector';
+import SavedTemplateManager from './SavedTemplateManager';
+import TemplateEditor from './TemplateEditor';
 import QuestionEditor from './QuestionEditor';
-import { getTemplateById } from '../templates';
+import { getTemplateById, templates as builtInTemplates } from '../templates';
 import { createQuestion, DEFAULT_METADATA, type PaperMetadata, type Question } from '../types/paper';
+import { fetchSavedTemplates, saveSavedTemplate, type SavedTemplate } from '../lib/templateApi';
+import { DEFAULT_TEMPLATE_CONFIG, createSavedTemplateDefinition } from '../templates/SavedTemplateRenderer';
 
 // --- Main Component ---
 export default function PaperEditor() {
   const user = useStore((s) => s.user);
+  const token = useStore((s) => s.token);
 
   const [templateId, setTemplateId] = useState('exam');
+  const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
+  const [templateDraft, setTemplateDraft] = useState({
+    name: '',
+    description: '',
+    config: DEFAULT_TEMPLATE_CONFIG,
+  });
+  const [editingTemplate, setEditingTemplate] = useState<SavedTemplate | null>(null);
+  const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
+  const [templateSaving, setTemplateSaving] = useState(false);
   const [metadata, setMetadata] = useState<PaperMetadata>({ ...DEFAULT_METADATA });
   const [questions, setQuestions] = useState<Question[]>([]);
   const [paperId, setPaperId] = useState<string | null>(null);
@@ -57,7 +71,82 @@ export default function PaperEditor() {
     if (questions.length === 0) {
       setQuestions([createQuestion('MCQ')]);
     }
-  }, []);
+  }, [questions.length]);
+
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        const templates = await fetchSavedTemplates({ token: token ?? undefined, schoolId: user?.school_id });
+        setSavedTemplates(templates);
+      } catch (error) {
+        console.warn('Unable to load saved templates', error);
+      }
+    };
+    loadTemplates();
+  }, [token, user?.school_id]);
+
+  const savedTemplateDefinitions = useMemo(
+    () => savedTemplates.map((template) => createSavedTemplateDefinition(template)),
+    [savedTemplates]
+  );
+
+  const activeTemplate = useMemo(
+    () => savedTemplateDefinitions.find((template) => template.id === templateId) ?? getTemplateById(templateId),
+    [savedTemplateDefinitions, templateId]
+  );
+
+  const openNewTemplateEditor = () => {
+    setEditingTemplate(null);
+    setTemplateDraft({ name: '', description: '', config: DEFAULT_TEMPLATE_CONFIG });
+    setTemplateEditorOpen(true);
+  };
+
+  const handleEditTemplate = (template: SavedTemplate) => {
+    setEditingTemplate(template);
+    setTemplateDraft({ name: template.name, description: template.description ?? '', config: template.config });
+    setTemplateEditorOpen(true);
+  };
+
+  const handleCancelTemplateEditor = () => {
+    setTemplateEditorOpen(false);
+    setEditingTemplate(null);
+    setTemplateDraft({ name: '', description: '', config: DEFAULT_TEMPLATE_CONFIG });
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!templateDraft.name.trim()) return alert('Please enter a template name.');
+    setTemplateSaving(true);
+    try {
+      const saved = await saveSavedTemplate({
+        templateId: editingTemplate?.id,
+        name: templateDraft.name,
+        description: templateDraft.description,
+        config: templateDraft.config,
+        token: token ?? undefined,
+        schoolId: user?.school_id,
+      });
+
+      setSavedTemplates((items) => {
+        const existingIndex = items.findIndex((item) => item.id === saved.id);
+        if (existingIndex !== -1) {
+          const copy = [...items];
+          copy[existingIndex] = saved;
+          return copy;
+        }
+        return [saved, ...items];
+      });
+      setTemplateId(saved.id);
+      setTemplateEditorOpen(false);
+      setEditingTemplate(null);
+      setTemplateDraft({ name: '', description: '', config: DEFAULT_TEMPLATE_CONFIG });
+      alert('Template saved');
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.message || 'Save failed');
+    } finally {
+      setTemplateSaving(false);
+    }
+  };
 
   // --- Question CRUD ---
   const addQuestion = (type: Question['type'] = 'MCQ') => {
@@ -129,8 +218,35 @@ export default function PaperEditor() {
   return (
     <div ref={splitPanelRef} className={`split-panel${splitterActive ? ' is-dragging' : ''}`}>
       <div className="panel-left" style={{ flex: `0 0 ${leftWidth}%` }}>
-        {/* Metadata Card */}
-        <TemplateSelector value={templateId} onChange={setTemplateId} />
+        <TemplateSelector
+          value={templateId}
+          onChange={setTemplateId}
+          builtInTemplates={builtInTemplates}
+          savedTemplates={savedTemplateDefinitions}
+        />
+
+        {templateEditorOpen ? (
+          <TemplateEditor
+            name={templateDraft.name}
+            description={templateDraft.description}
+            config={templateDraft.config}
+            onChangeName={(name) => setTemplateDraft((draft) => ({ ...draft, name }))}
+            onChangeDescription={(description) => setTemplateDraft((draft) => ({ ...draft, description }))}
+            onChangeConfig={(config) => setTemplateDraft((draft) => ({ ...draft, config }))}
+            onSave={handleSaveTemplate}
+            onCancel={handleCancelTemplateEditor}
+            saving={templateSaving}
+          />
+        ) : (
+          <SavedTemplateManager
+            savedTemplates={savedTemplates}
+            selectedTemplateId={templateId}
+            onSelect={setTemplateId}
+            onEdit={handleEditTemplate}
+            onNew={openNewTemplateEditor}
+          />
+        )}
+
         <div className="card">
           <div className="card-title">📋 Paper Metadata</div>
           <div className="meta-grid">
@@ -286,14 +402,14 @@ export default function PaperEditor() {
 
       <div className="panel-right">
         <div className="preview-card preview-card-fill">
-          <DocumentPreview template={getTemplateById(templateId)} metadata={metadata} questions={questions} />
+          <DocumentPreview template={activeTemplate} metadata={metadata} questions={questions} />
         </div>
         <div className="preview-card no-print preview-card-compact">
           <div className="preview-toolbar">
             <span>🖨️ PDF Preview</span>
           </div>
           <div className="preview-body preview-body-compact">
-            <PDFPreview template={getTemplateById(templateId)} metadata={metadata} questions={questions} />
+            <PDFPreview template={activeTemplate} metadata={metadata} questions={questions} />
           </div>
         </div>
       </div>

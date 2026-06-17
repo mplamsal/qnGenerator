@@ -3,7 +3,7 @@
     "target": "ES2022",
     "lib": ["DOM", "ES2022"],
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
     "esModuleInterop": true,
@@ -11,8 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "ignoreDeprecations": "6.0"
+    "noEmit": true
   },
   "include": ["src"]
 }

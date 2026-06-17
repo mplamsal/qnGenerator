@@ -1,0 +1,62 @@
+[
+  {
+    "id": "exam",
+    "name": "Standard Exam",
+    "description": "Standard exam layout with header, instructions, and question list.",
+    "category": "Terminal Exam",
+    "orientation": "portrait",
+    "config": {
+      "margins": { "top": 32, "right": 40, "bottom": 32, "left": 40 },
+      "header": {
+        "enabled": true,
+        "showSchoolName": true,
+        "showExamTitle": true,
+        "showSubjectLine": true,
+        "showMetaRow": true
+      },
+      "instructions": "Answer all questions.",
+      "footerText": "Good luck!",
+      "questionStyle": { "showMarks": true, "numberingStyle": "number", "spacing": 12 }
+    }
+  },
+  {
+    "id": "unit-test",
+    "name": "Unit Test Paper",
+    "description": "Compact layout for short unit tests and quizzes.",
+    "category": "Unit Test",
+    "orientation": "portrait",
+    "config": {
+      "margins": { "top": 28, "right": 32, "bottom": 28, "left": 32 },
+      "header": {
+        "enabled": true,
+        "showSchoolName": true,
+        "showExamTitle": true,
+        "showSubjectLine": false,
+        "showMetaRow": true
+      },
+      "instructions": "Choose the correct answers and show all working clearly.",
+      "footerText": "Check your answers before submitting.",
+      "questionStyle": { "showMarks": true, "numberingStyle": "letter", "spacing": 10 }
+    }
+  },
+  {
+    "id": "landscape",
+    "name": "Landscape Format",
+    "description": "Wide landscape page format for tables, charts, or extended questions.",
+    "category": "Special Format",
+    "orientation": "landscape",
+    "config": {
+      "margins": { "top": 24, "right": 24, "bottom": 24, "left": 24 },
+      "header": {
+        "enabled": true,
+        "showSchoolName": true,
+        "showExamTitle": true,
+        "showSubjectLine": true,
+        "showMetaRow": false
+      },
+      "instructions": "Answer all questions in the spaces provided.",
+      "footerText": "Use the full width of the page.",
+      "questionStyle": { "showMarks": false, "numberingStyle": "number", "spacing": 14 }
+    }
+  }
+]
