@@ -24,6 +24,8 @@ const DEFAULT_LAYOUT: TemplateLayout = {
   lineHeight: 1.5,
   headerSpacing: 5,
   sectionSpacing: 10,
+  columnGap: 14,
+  cutLine: 'dashed',
 }
 
 // Older saved/built-in configs may not include the `layout` block — fill defaults.
@@ -195,7 +197,7 @@ function PreviewBody({
             ? {
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
-                columnGap: `${p(14)}px`,
+                columnGap: `${p(layout.columnGap)}px`,
               }
             : {}
         }
@@ -294,18 +296,21 @@ export function TemplatePreviewRenderer({
   }
 
   if (layout.twinColumns) {
-    const gap = p(14)
+    const half = p(layout.columnGap) / 2
+    const cutBorder: CSSProperties =
+      layout.cutLine === 'none' ? {} : { borderLeft: `1px ${layout.cutLine} #999` }
     return (
       <div className="doc-page" style={{ ...pageStyle, display: 'flex' }}>
-        <div style={{ flex: 1, minWidth: 0, paddingRight: gap }}>
+        {/* Both halves render an identical clone of the paper so each torn piece is complete. */}
+        <div style={{ flex: 1, minWidth: 0, paddingRight: half }}>
           <PreviewBody metadata={metadata} questions={questions} config={config} />
         </div>
         <div
           style={{
             flex: 1,
             minWidth: 0,
-            paddingLeft: gap,
-            borderLeft: '1px dashed #999',
+            paddingLeft: half,
+            ...cutBorder,
           }}
         >
           <PreviewBody metadata={metadata} questions={questions} config={config} />
@@ -506,7 +511,7 @@ function PdfBody({
               {row.map((q, ci) => {
                 const idx = ri * 2 + ci
                 return (
-                  <View key={q.id || idx} style={{ flex: 1, marginRight: ci === 0 ? 7 : 0, marginLeft: ci === 1 ? 7 : 0 }}>
+                  <View key={q.id || idx} style={{ flex: 1, marginRight: ci === 0 ? layout.columnGap / 2 : 0, marginLeft: ci === 1 ? layout.columnGap / 2 : 0 }}>
                     <PdfQuestion q={q} idx={idx} config={config} />
                   </View>
                 )
@@ -565,16 +570,17 @@ export function TemplatePdfRenderer({
       <Page size="A4" orientation={orientation} style={pageStyle}>
         {layout.twinColumns ? (
           <View style={{ flexDirection: 'row' }}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
+            {/* Identical clone on each half so every torn piece is a full paper. */}
+            <View style={{ flex: 1, paddingRight: layout.columnGap / 2 }}>
               <PdfBody metadata={metadata} questions={questions} config={config} />
             </View>
             <View
               style={{
                 flex: 1,
-                paddingLeft: 12,
-                borderLeftWidth: 0.75,
-                borderLeftColor: '#999999',
-                borderStyle: 'dashed',
+                paddingLeft: layout.columnGap / 2,
+                ...(layout.cutLine === 'none'
+                  ? {}
+                  : { borderLeftWidth: 0.75, borderLeftColor: '#999999', borderStyle: layout.cutLine }),
               }}
             >
               <PdfBody metadata={metadata} questions={questions} config={config} />

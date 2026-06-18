@@ -19,7 +19,7 @@ export const DEFAULT_TEMPLATE_CONFIG: TemplateConfig = {
   footerText: 'Good luck! Read each question carefully.',
   questionStyle: { showMarks: true, numberingStyle: 'number', spacing: 10 },
   questionLayout: { columns: 1, mcqColumns: 2, showAnswerLines: false, answerLineCount: 0, showDateNameFields: false },
-  layout: { twinColumns: false, lineHeight: 1.5, headerSpacing: 5, sectionSpacing: 10 },
+  layout: { twinColumns: false, lineHeight: 1.5, headerSpacing: 5, sectionSpacing: 10, columnGap: 14, cutLine: 'dashed' },
 }
 
 // Saved templates reuse the full-featured TemplateRenderer so every control

@@ -201,3 +201,103 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+
+/* ── Template builder (collapsible sections) ── */
+.tmpl-builder .card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tmpl-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.tmpl-section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  background: #f8fafc;
+  border: none;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: left;
+}
+
+.tmpl-section-header:hover {
+  background: #f1f5f9;
+}
+
+.tmpl-section-header .tmpl-section-icon {
+  font-size: 15px;
+}
+
+.tmpl-section-header .tmpl-section-chevron {
+  margin-left: auto;
+  font-size: 11px;
+  color: #94a3b8;
+  transition: transform 0.15s ease;
+}
+
+.tmpl-section.is-open .tmpl-section-chevron {
+  transform: rotate(180deg);
+}
+
+.tmpl-section-body {
+  padding: 14px;
+  border-top: 1px solid #eef2f7;
+}
+
+.tmpl-section-body .input-group:last-child {
+  margin-bottom: 0;
+}
+
+.tmpl-check {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.tmpl-check input {
+  width: auto !important;
+}
+
+.tmpl-checks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.tmpl-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.tmpl-density-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tmpl-density-btn {
+  flex: 1;
+  min-width: 84px;
+}
+
+.tmpl-density-btn.is-active {
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #1d4ed8;
+}
