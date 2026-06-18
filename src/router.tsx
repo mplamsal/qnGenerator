@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import TeacherDashboard from './pages/TeacherDashboard'
 import AdminDashboard from './pages/AdminDashboard'
+import Landing from './pages/Landing'
+import TemplateViewer from './pages/TemplateViewer'
 import { useStore } from './store/useStore'
 
 export default function Router(){
@@ -12,7 +14,8 @@ export default function Router(){
       <Route path="/login" element={<Login/>} />
       <Route path="/teacher" element={<TeacherDashboard/>} />
       <Route path="/admin" element={<AdminDashboard/>} />
-      <Route path="/" element={<Navigate to={'/teacher'} />} />
+      <Route path="/template" element={<TemplateViewer/>} />
+      <Route path="/" element={<Landing/>} />
     </Routes>
   )
 }

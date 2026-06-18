@@ -1,6 +1,6 @@
 import React from 'react'
 import { formatExamTitle, formatSetLabel, mcqOptionLabel } from '../../lib/documentFormat'
-import MathText from '../../lib/math.tsx'
+import MathText from '../../lib/math'
 import type { PaperMetadata, Question } from '../../types/paper'
 
 export function ExamDocumentHeader({ metadata }: { metadata: Partial<PaperMetadata> }) {
