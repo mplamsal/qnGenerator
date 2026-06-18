@@ -6,7 +6,7 @@
     "category": "Terminal Exam",
     "orientation": "portrait",
     "config": {
-      "margins": { "top": 54, "right": 56, "bottom": 54, "left": 56 },
+      "margins": { "top": 24, "right": 56, "bottom": 54, "left": 56 },
       "header": {
         "enabled": true,
         "showSchoolName": true,
@@ -15,7 +15,7 @@
         "showMetaRow": true
       },
       "headerStyle": { "showLogo": true, "borderStyle": "box", "paddingVertical": 8, "paddingHorizontal": 12 },
-      "fontSizes": { "schoolName": 16, "examTitle": 13, "subjectLine": 12, "metaRow": 10, "instructions": 11, "questionText": 12, "mcqOption": 11, "footer": 9 },
+      "fontSizes": { "schoolName": 12, "examTitle": 13, "subjectLine": 12, "metaRow": 10, "instructions": 11, "questionText": 12, "mcqOption": 11, "footer": 9 },
       "instructions": "Answer all questions.",
       "footerText": "Good luck!",
       "questionStyle": { "showMarks": true, "numberingStyle": "number", "spacing": 10 },
