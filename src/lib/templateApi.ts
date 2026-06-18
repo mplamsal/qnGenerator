@@ -2,6 +2,7 @@ import { listTemplates as listLocalTemplates, saveTemplate as saveTemplateLocal 
 
 export type { SavedTemplate } from '../types/savedTemplate'
 import type { SavedTemplate } from '../types/savedTemplate'
+import type { TemplateConfig } from '../templates/types'
 
 export async function fetchSavedTemplates(options?: { token?: string; schoolId?: string }) {
   try {
@@ -20,6 +21,7 @@ export async function fetchSavedTemplates(options?: { token?: string; schoolId?:
       id: item.id,
       name: item.name,
       description: item.description,
+      orientation: item.orientation,
       config: item.configJson || item.config,
       createdAt: item.createdAt,
     })) as SavedTemplate[]
@@ -32,6 +34,7 @@ export async function saveSavedTemplate(payload: {
   templateId?: string
   name: string
   description?: string
+  orientation?: 'portrait' | 'landscape'
   config: TemplateConfig
   token?: string
   schoolId?: string
@@ -41,6 +44,7 @@ export async function saveSavedTemplate(payload: {
       templateId: payload.templateId,
       name: payload.name,
       description: payload.description,
+      orientation: payload.orientation,
       config: payload.config,
     }
 
@@ -62,6 +66,7 @@ export async function saveSavedTemplate(payload: {
       id: data.id,
       name: data.name,
       description: data.description,
+      orientation: data.orientation ?? payload.orientation,
       config: data.configJson || data.config,
       createdAt: data.createdAt,
     } as SavedTemplate
@@ -70,6 +75,7 @@ export async function saveSavedTemplate(payload: {
       templateId: payload.templateId,
       name: payload.name,
       description: payload.description,
+      orientation: payload.orientation,
       config: payload.config,
     }) as SavedTemplate
   }

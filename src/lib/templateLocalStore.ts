@@ -4,6 +4,7 @@ type StoredTemplate = {
   id: string
   name: string
   description?: string
+  orientation?: 'portrait' | 'landscape'
   config: any
   createdAt: string
 }
@@ -28,7 +29,7 @@ export function listTemplates() {
   return loadAll()
 }
 
-export function saveTemplate(payload: { templateId?: string; name: string; description?: string; config: any }) {
+export function saveTemplate(payload: { templateId?: string; name: string; description?: string; orientation?: 'portrait' | 'landscape'; config: any }) {
   const items = loadAll()
   if (payload.templateId) {
     const existingIndex = items.findIndex((item) => item.id === payload.templateId)
@@ -37,6 +38,7 @@ export function saveTemplate(payload: { templateId?: string; name: string; descr
         ...items[existingIndex],
         name: payload.name,
         description: payload.description,
+        orientation: payload.orientation,
         config: payload.config,
       }
       items[existingIndex] = updated
@@ -49,6 +51,7 @@ export function saveTemplate(payload: { templateId?: string; name: string; descr
     id: uuidv4(),
     name: payload.name,
     description: payload.description,
+    orientation: payload.orientation,
     config: payload.config,
     createdAt: new Date().toISOString(),
   }

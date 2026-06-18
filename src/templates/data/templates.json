@@ -19,7 +19,8 @@
       "instructions": "Answer all questions.",
       "footerText": "Good luck!",
       "questionStyle": { "showMarks": true, "numberingStyle": "number", "spacing": 10 },
-      "questionLayout": { "columns": 1, "mcqColumns": 2, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": false }
+      "questionLayout": { "columns": 1, "mcqColumns": 2, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": false },
+      "layout": { "twinColumns": false, "lineHeight": 1.5, "headerSpacing": 5, "sectionSpacing": 10 }
     }
   },
   {
@@ -42,7 +43,8 @@
       "instructions": "Answer all questions. Show all working clearly.",
       "footerText": "Practice makes perfect!",
       "questionStyle": { "showMarks": true, "numberingStyle": "number", "spacing": 8 },
-      "questionLayout": { "columns": 1, "mcqColumns": 2, "showAnswerLines": true, "answerLineCount": 3, "showDateNameFields": true }
+      "questionLayout": { "columns": 1, "mcqColumns": 2, "showAnswerLines": true, "answerLineCount": 3, "showDateNameFields": true },
+      "layout": { "twinColumns": false, "lineHeight": 1.5, "headerSpacing": 5, "sectionSpacing": 10 }
     }
   },
   {
@@ -65,7 +67,8 @@
       "instructions": "Write legibly. Answer all sections in full sentences.",
       "footerText": "Review your work before submitting.",
       "questionStyle": { "showMarks": true, "numberingStyle": "number", "spacing": 14 },
-      "questionLayout": { "columns": 1, "mcqColumns": 1, "showAnswerLines": true, "answerLineCount": 8, "showDateNameFields": true }
+      "questionLayout": { "columns": 1, "mcqColumns": 1, "showAnswerLines": true, "answerLineCount": 8, "showDateNameFields": true },
+      "layout": { "twinColumns": false, "lineHeight": 1.7, "headerSpacing": 6, "sectionSpacing": 14 }
     }
   },
   {
@@ -88,7 +91,8 @@
       "instructions": "Choose the correct answers and show all working clearly.",
       "footerText": "Check your answers before submitting.",
       "questionStyle": { "showMarks": true, "numberingStyle": "letter", "spacing": 8 },
-      "questionLayout": { "columns": 2, "mcqColumns": 2, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": false }
+      "questionLayout": { "columns": 2, "mcqColumns": 2, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": false },
+      "layout": { "twinColumns": false, "lineHeight": 1.3, "headerSpacing": 3, "sectionSpacing": 6 }
     }
   },
   {
@@ -111,7 +115,8 @@
       "instructions": "Circle the correct option for each question.",
       "footerText": "Do not write outside the answer area.",
       "questionStyle": { "showMarks": false, "numberingStyle": "number", "spacing": 6 },
-      "questionLayout": { "columns": 1, "mcqColumns": 4, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": true }
+      "questionLayout": { "columns": 1, "mcqColumns": 4, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": true },
+      "layout": { "twinColumns": false, "lineHeight": 1.4, "headerSpacing": 4, "sectionSpacing": 8 }
     }
   },
   {
@@ -134,7 +139,8 @@
       "instructions": "Write TRUE or FALSE in the blank next to each statement.",
       "footerText": "Check your answers.",
       "questionStyle": { "showMarks": false, "numberingStyle": "number", "spacing": 5 },
-      "questionLayout": { "columns": 1, "mcqColumns": 1, "showAnswerLines": true, "answerLineCount": 1, "showDateNameFields": false }
+      "questionLayout": { "columns": 1, "mcqColumns": 1, "showAnswerLines": true, "answerLineCount": 1, "showDateNameFields": false },
+      "layout": { "twinColumns": false, "lineHeight": 1.3, "headerSpacing": 3, "sectionSpacing": 6 }
     }
   },
   {
@@ -157,7 +163,8 @@
       "instructions": "Fill in each blank with the correct word or phrase.",
       "footerText": "Write clearly and neatly.",
       "questionStyle": { "showMarks": false, "numberingStyle": "number", "spacing": 10 },
-      "questionLayout": { "columns": 1, "mcqColumns": 2, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": true }
+      "questionLayout": { "columns": 1, "mcqColumns": 2, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": true },
+      "layout": { "twinColumns": false, "lineHeight": 1.5, "headerSpacing": 5, "sectionSpacing": 10 }
     }
   },
   {
@@ -180,7 +187,32 @@
       "instructions": "Answer all questions in the spaces provided.",
       "footerText": "Use the full width of the page.",
       "questionStyle": { "showMarks": false, "numberingStyle": "number", "spacing": 8 },
-      "questionLayout": { "columns": 2, "mcqColumns": 4, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": false }
+      "questionLayout": { "columns": 2, "mcqColumns": 4, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": false },
+      "layout": { "twinColumns": false, "lineHeight": 1.4, "headerSpacing": 4, "sectionSpacing": 8 }
+    }
+  },
+  {
+    "id": "twin-landscape",
+    "name": "Twin Tear-off (Landscape)",
+    "description": "Two identical compact copies printed side by side on one landscape A4 — tear down the middle for two papers.",
+    "category": "Special Format",
+    "orientation": "landscape",
+    "config": {
+      "margins": { "top": 24, "right": 24, "bottom": 24, "left": 24 },
+      "header": {
+        "enabled": true,
+        "showSchoolName": true,
+        "showExamTitle": true,
+        "showSubjectLine": true,
+        "showMetaRow": true
+      },
+      "headerStyle": { "showLogo": false, "borderStyle": "box", "paddingVertical": 5, "paddingHorizontal": 8 },
+      "fontSizes": { "schoolName": 12, "examTitle": 11, "subjectLine": 10, "metaRow": 9, "instructions": 9, "questionText": 10, "mcqOption": 9, "footer": 8 },
+      "instructions": "Answer all questions.",
+      "footerText": "Good luck!",
+      "questionStyle": { "showMarks": true, "numberingStyle": "number", "spacing": 6 },
+      "questionLayout": { "columns": 1, "mcqColumns": 1, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": false },
+      "layout": { "twinColumns": true, "lineHeight": 1.3, "headerSpacing": 3, "sectionSpacing": 6 }
     }
   }
 ]
