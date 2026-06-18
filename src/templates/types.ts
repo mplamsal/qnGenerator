@@ -53,6 +53,19 @@ export type TemplateQuestionLayout = {
   showDateNameFields: boolean
 }
 
+// Compactness + page layout controls.
+export type TemplateLayout = {
+  // Render two identical tear-off copies side by side (ideal on landscape A4 so
+  // the sheet can be cut down the middle into two complete papers).
+  twinColumns: boolean
+  // Line-height multiplier for question / option text (lower = more compact).
+  lineHeight: number
+  // pt — vertical gap between header lines; drives the header box height.
+  headerSpacing: number
+  // pt — gap below the header and instructions blocks.
+  sectionSpacing: number
+}
+
 export type TemplateConfig = {
   margins: TemplateMargins
   header: TemplateHeaderConfig
@@ -62,6 +75,7 @@ export type TemplateConfig = {
   footerText: string
   questionStyle: TemplateQuestionStyle
   questionLayout: TemplateQuestionLayout
+  layout: TemplateLayout
 }
 
 export type TemplateDefinition = {

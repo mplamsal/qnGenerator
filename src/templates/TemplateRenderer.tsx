@@ -2,8 +2,8 @@ import type { CSSProperties } from 'react'
 import { Document, Page, Text, View, Image } from '@react-pdf/renderer'
 import MathText from '../lib/math'
 import { formatExamTitle, formatSetLabel, mcqOptionLabel } from '../lib/documentFormat'
-import type { TemplateConfig, TemplateDataProps } from './types'
-import type { Question } from '../types/paper'
+import type { TemplateConfig, TemplateDataProps, TemplateLayout } from './types'
+import type { PaperMetadata, Question } from '../types/paper'
 
 // All config values are in PDF points (pt).
 // Preview multiplies by PT_TO_PX so both outputs are proportionally identical.
@@ -19,18 +19,31 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   return out
 }
 
+const DEFAULT_LAYOUT: TemplateLayout = {
+  twinColumns: false,
+  lineHeight: 1.5,
+  headerSpacing: 5,
+  sectionSpacing: 10,
+}
+
+// Older saved/built-in configs may not include the `layout` block — fill defaults.
+export function resolveLayout(config: TemplateConfig): TemplateLayout {
+  return { ...DEFAULT_LAYOUT, ...(config.layout ?? {}) }
+}
+
 // ── Preview renderer (HTML) ──────────────────────────────────────────────────
 
-export function TemplatePreviewRenderer({
-  metadata = {},
-  questions = [],
+function PreviewBody({
+  metadata,
+  questions,
   config,
-  orientation = 'portrait',
-}: TemplateDataProps & { config: TemplateConfig; orientation?: 'portrait' | 'landscape' }) {
-  const pageWidth = orientation === 'landscape' ? 1123 : 794
-  const pageMinHeight = orientation === 'landscape' ? 794 : 1123
+}: {
+  metadata: Partial<PaperMetadata>
+  questions: Question[]
+  config: TemplateConfig
+}) {
   const { header, headerStyle, fontSizes, questionStyle, questionLayout } = config
-
+  const layout = resolveLayout(config)
   const logoSize = p(40)
 
   const headerBorder: CSSProperties =
@@ -44,8 +57,8 @@ export function TemplatePreviewRenderer({
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
-    gap: `${p(5)}px`,
-    marginBottom: `${p(10)}px`,
+    gap: `${p(layout.headerSpacing)}px`,
+    marginBottom: `${p(layout.sectionSpacing)}px`,
     padding:
       headerStyle.paddingVertical > 0 || headerStyle.paddingHorizontal > 0
         ? `${p(headerStyle.paddingVertical)}px ${p(headerStyle.paddingHorizontal)}px`
@@ -54,17 +67,7 @@ export function TemplatePreviewRenderer({
   }
 
   return (
-    <div
-      className="doc-page"
-      style={{
-        width: pageWidth,
-        minHeight: pageMinHeight,
-        paddingTop: p(config.margins.top),
-        paddingRight: p(config.margins.right),
-        paddingBottom: p(config.margins.bottom),
-        paddingLeft: p(config.margins.left),
-      }}
-    >
+    <>
       {/* ── Header ── */}
       {header.enabled ? (
         <div style={headerBoxStyle}>
@@ -130,7 +133,7 @@ export function TemplatePreviewRenderer({
             display: 'flex',
             gap: `${p(20)}px`,
             flexWrap: 'wrap',
-            marginBottom: `${p(10)}px`,
+            marginBottom: `${p(layout.sectionSpacing)}px`,
             fontSize: `${p(fontSizes.metaRow)}px`,
           }}
         >
@@ -177,7 +180,7 @@ export function TemplatePreviewRenderer({
             textAlign: 'center',
             fontStyle: 'italic',
             fontWeight: 700,
-            marginBottom: `${p(10)}px`,
+            marginBottom: `${p(layout.sectionSpacing)}px`,
             fontSize: `${p(fontSizes.instructions)}px`,
           }}
         >
@@ -199,7 +202,7 @@ export function TemplatePreviewRenderer({
       >
         {questions.map((q, idx) => (
           <div key={q.id || idx} style={{ marginBottom: `${p(questionStyle.spacing)}px` }}>
-            <div style={{ fontSize: `${p(fontSizes.questionText)}px`, lineHeight: 1.6 }}>
+            <div style={{ fontSize: `${p(fontSizes.questionText)}px`, lineHeight: layout.lineHeight }}>
               <strong>
                 {questionStyle.numberingStyle === 'letter'
                   ? `${String.fromCharCode(97 + idx)}.`
@@ -220,6 +223,7 @@ export function TemplatePreviewRenderer({
                   gridTemplateColumns: `repeat(${questionLayout.mcqColumns}, 1fr)`,
                   gap: `${p(2)}px ${p(10)}px`,
                   fontSize: `${p(fontSizes.mcqOption)}px`,
+                  lineHeight: layout.lineHeight,
                 }}
               >
                 {q.options.map((opt, oi) =>
@@ -266,6 +270,53 @@ export function TemplatePreviewRenderer({
           {config.footerText}
         </div>
       ) : null}
+    </>
+  )
+}
+
+export function TemplatePreviewRenderer({
+  metadata = {},
+  questions = [],
+  config,
+  orientation = 'portrait',
+}: TemplateDataProps & { config: TemplateConfig; orientation?: 'portrait' | 'landscape' }) {
+  const pageWidth = orientation === 'landscape' ? 1123 : 794
+  const pageMinHeight = orientation === 'landscape' ? 794 : 1123
+  const layout = resolveLayout(config)
+
+  const pageStyle: CSSProperties = {
+    width: pageWidth,
+    minHeight: pageMinHeight,
+    paddingTop: p(config.margins.top),
+    paddingRight: p(config.margins.right),
+    paddingBottom: p(config.margins.bottom),
+    paddingLeft: p(config.margins.left),
+  }
+
+  if (layout.twinColumns) {
+    const gap = p(14)
+    return (
+      <div className="doc-page" style={{ ...pageStyle, display: 'flex' }}>
+        <div style={{ flex: 1, minWidth: 0, paddingRight: gap }}>
+          <PreviewBody metadata={metadata} questions={questions} config={config} />
+        </div>
+        <div
+          style={{
+            flex: 1,
+            minWidth: 0,
+            paddingLeft: gap,
+            borderLeft: '1px dashed #999',
+          }}
+        >
+          <PreviewBody metadata={metadata} questions={questions} config={config} />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="doc-page" style={pageStyle}>
+      <PreviewBody metadata={metadata} questions={questions} config={config} />
     </div>
   )
 }
@@ -275,13 +326,14 @@ export function TemplatePreviewRenderer({
 
 function PdfQuestion({ q, idx, config }: { q: Question; idx: number; config: TemplateConfig }) {
   const { questionStyle, questionLayout, fontSizes } = config
+  const layout = resolveLayout(config)
   const mcqCols = questionLayout.mcqColumns
-  const validOptions = q.options?.filter((opt, oi) => opt.trim() || (q.options?.length ?? 0) <= 4) ?? []
+  const validOptions = q.options?.filter((opt) => opt.trim() || (q.options?.length ?? 0) <= 4) ?? []
 
   return (
     <View>
       <View style={{ flexDirection: 'row', marginBottom: 2 }}>
-        <Text style={{ flex: 1, fontSize: fontSizes.questionText, fontFamily: 'Times-Roman' }}>
+        <Text style={{ flex: 1, fontSize: fontSizes.questionText, fontFamily: 'Times-Roman', lineHeight: layout.lineHeight }}>
           {questionStyle.numberingStyle === 'letter'
             ? `${String.fromCharCode(97 + idx)}.`
             : `${idx + 1}.`}{' '}
@@ -306,7 +358,7 @@ function PdfQuestion({ q, idx, config }: { q: Question; idx: number; config: Tem
                     <Text style={{ width: 16, fontSize: fontSizes.mcqOption, fontFamily: 'Times-Roman' }}>
                       ({mcqOptionLabel(oi)})
                     </Text>
-                    <Text style={{ flex: 1, fontSize: fontSizes.mcqOption, fontFamily: 'Times-Roman' }}>
+                    <Text style={{ flex: 1, fontSize: fontSizes.mcqOption, fontFamily: 'Times-Roman', lineHeight: layout.lineHeight }}>
                       {opt || '………………'}
                     </Text>
                   </View>
@@ -332,27 +384,22 @@ function PdfQuestion({ q, idx, config }: { q: Question; idx: number; config: Tem
   )
 }
 
-export function TemplatePdfRenderer({
-  metadata = {},
-  questions = [],
+function PdfBody({
+  metadata,
+  questions,
   config,
-  orientation = 'portrait',
-}: TemplateDataProps & { config: TemplateConfig; orientation?: 'portrait' | 'landscape' }) {
+}: {
+  metadata: Partial<PaperMetadata>
+  questions: Question[]
+  config: TemplateConfig
+}) {
   const { header, headerStyle, fontSizes, questionStyle, questionLayout } = config
+  const layout = resolveLayout(config)
   const logoSize = 40
-
-  const pageStyle = {
-    paddingTop: config.margins.top,
-    paddingRight: config.margins.right,
-    paddingBottom: config.margins.bottom,
-    paddingLeft: config.margins.left,
-    fontFamily: 'Times-Roman',
-    fontSize: fontSizes.questionText,
-  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const headerBoxPdfStyle: any = {
-    marginBottom: 10,
+    marginBottom: layout.sectionSpacing,
     ...(headerStyle.paddingVertical > 0 || headerStyle.paddingHorizontal > 0
       ? { paddingTop: headerStyle.paddingVertical, paddingBottom: headerStyle.paddingVertical, paddingLeft: headerStyle.paddingHorizontal, paddingRight: headerStyle.paddingHorizontal }
       : {}),
@@ -364,135 +411,178 @@ export function TemplatePdfRenderer({
   }
 
   return (
+    <View>
+      {/* ── Header ── */}
+      {header.enabled ? (
+        <View style={headerBoxPdfStyle}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <View style={{ width: logoSize, height: logoSize }}>
+              {headerStyle.showLogo ? (
+                <Image src="/school-logo.png" style={{ width: logoSize, height: logoSize }} />
+              ) : null}
+            </View>
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              {header.showSchoolName ? (
+                <Text style={{ fontSize: fontSizes.schoolName, fontFamily: 'Times-Bold' }}>
+                  {metadata.schoolName || 'Your School Name'}
+                </Text>
+              ) : null}
+              {header.showExamTitle ? (
+                <Text style={{ fontSize: fontSizes.examTitle, fontFamily: 'Times-Bold', marginTop: 2 }}>
+                  {formatExamTitle(metadata)}
+                </Text>
+              ) : null}
+              {header.showSubjectLine ? (
+                <Text style={{ fontSize: fontSizes.subjectLine, fontFamily: 'Times-Bold', marginTop: 2 }}>
+                  Subject: {metadata.subject || 'Subject'}
+                </Text>
+              ) : null}
+            </View>
+            <View style={{ width: logoSize }} />
+          </View>
+
+          {header.showMetaRow ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'flex-end',
+                marginTop: layout.headerSpacing,
+              }}
+            >
+              <View>
+                <Text style={{ fontSize: fontSizes.metaRow }}>Class: {metadata.grade || '—'}</Text>
+                <Text style={{ fontSize: fontSizes.metaRow }}>Time: {metadata.duration || '—'}</Text>
+              </View>
+              <Text style={{ fontSize: fontSizes.examTitle, fontFamily: 'Times-Bold' }}>
+                {formatSetLabel(metadata) || ''}
+              </Text>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={{ fontSize: fontSizes.metaRow }}>F.M. = {metadata.fullMarks || '—'}</Text>
+              </View>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+
+      {/* ── Name / Date fields ── */}
+      {questionLayout.showDateNameFields ? (
+        <View style={{ flexDirection: 'row', marginBottom: layout.sectionSpacing }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginRight: 18 }}>
+            <Text style={{ fontSize: fontSizes.metaRow }}>Name: </Text>
+            <View style={{ width: 110, borderBottomWidth: 0.75, borderBottomColor: '#000', height: 11 }} />
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginRight: 18 }}>
+            <Text style={{ fontSize: fontSizes.metaRow }}>Date: </Text>
+            <View style={{ width: 70, borderBottomWidth: 0.75, borderBottomColor: '#000', height: 11 }} />
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+            <Text style={{ fontSize: fontSizes.metaRow }}>Roll No.: </Text>
+            <View style={{ width: 55, borderBottomWidth: 0.75, borderBottomColor: '#000', height: 11 }} />
+          </View>
+        </View>
+      ) : null}
+
+      {/* ── Instructions ── */}
+      {config.instructions ? (
+        <Text
+          style={{
+            textAlign: 'center',
+            fontStyle: 'italic',
+            fontFamily: 'Times-BoldItalic',
+            fontSize: fontSizes.instructions,
+            marginBottom: layout.sectionSpacing,
+          }}
+        >
+          {config.instructions}
+        </Text>
+      ) : null}
+
+      {/* ── Questions ── */}
+      {questionLayout.columns === 2 ? (
+        <View>
+          {chunkArray(questions, 2).map((row, ri) => (
+            <View key={ri} style={{ flexDirection: 'row', marginBottom: questionStyle.spacing }}>
+              {row.map((q, ci) => {
+                const idx = ri * 2 + ci
+                return (
+                  <View key={q.id || idx} style={{ flex: 1, marginRight: ci === 0 ? 7 : 0, marginLeft: ci === 1 ? 7 : 0 }}>
+                    <PdfQuestion q={q} idx={idx} config={config} />
+                  </View>
+                )
+              })}
+            </View>
+          ))}
+        </View>
+      ) : (
+        <View>
+          {questions.map((q, idx) => (
+            <View key={q.id || idx} style={{ marginBottom: questionStyle.spacing }}>
+              <PdfQuestion q={q} idx={idx} config={config} />
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* ── Footer ── */}
+      {config.footerText ? (
+        <Text
+          style={{
+            marginTop: 16,
+            fontSize: fontSizes.footer,
+            textAlign: 'center',
+            fontStyle: 'italic',
+            color: '#555555',
+          }}
+        >
+          {config.footerText}
+        </Text>
+      ) : null}
+    </View>
+  )
+}
+
+export function TemplatePdfRenderer({
+  metadata = {},
+  questions = [],
+  config,
+  orientation = 'portrait',
+}: TemplateDataProps & { config: TemplateConfig; orientation?: 'portrait' | 'landscape' }) {
+  const { fontSizes } = config
+  const layout = resolveLayout(config)
+
+  const pageStyle = {
+    paddingTop: config.margins.top,
+    paddingRight: config.margins.right,
+    paddingBottom: config.margins.bottom,
+    paddingLeft: config.margins.left,
+    fontFamily: 'Times-Roman',
+    fontSize: fontSizes.questionText,
+  }
+
+  return (
     <Document>
       <Page size="A4" orientation={orientation} style={pageStyle}>
-
-        {/* ── Header ── */}
-        {header.enabled ? (
-          <View style={headerBoxPdfStyle}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View style={{ width: logoSize, height: logoSize }}>
-                {headerStyle.showLogo ? (
-                  <Image src="/school-logo.png" style={{ width: logoSize, height: logoSize }} />
-                ) : null}
-              </View>
-              <View style={{ flex: 1, alignItems: 'center' }}>
-                {header.showSchoolName ? (
-                  <Text style={{ fontSize: fontSizes.schoolName, fontFamily: 'Times-Bold' }}>
-                    {metadata.schoolName || 'Your School Name'}
-                  </Text>
-                ) : null}
-                {header.showExamTitle ? (
-                  <Text style={{ fontSize: fontSizes.examTitle, fontFamily: 'Times-Bold', marginTop: 2 }}>
-                    {formatExamTitle(metadata)}
-                  </Text>
-                ) : null}
-                {header.showSubjectLine ? (
-                  <Text style={{ fontSize: fontSizes.subjectLine, fontFamily: 'Times-Bold', marginTop: 2 }}>
-                    Subject: {metadata.subject || 'Subject'}
-                  </Text>
-                ) : null}
-              </View>
-              <View style={{ width: logoSize }} />
+        {layout.twinColumns ? (
+          <View style={{ flexDirection: 'row' }}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <PdfBody metadata={metadata} questions={questions} config={config} />
             </View>
-
-            {header.showMetaRow ? (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-end',
-                  marginTop: 6,
-                }}
-              >
-                <View>
-                  <Text style={{ fontSize: fontSizes.metaRow }}>Class: {metadata.grade || '—'}</Text>
-                  <Text style={{ fontSize: fontSizes.metaRow }}>Time: {metadata.duration || '—'}</Text>
-                </View>
-                <Text style={{ fontSize: fontSizes.examTitle, fontFamily: 'Times-Bold' }}>
-                  {formatSetLabel(metadata) || ''}
-                </Text>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: fontSizes.metaRow }}>F.M. = {metadata.fullMarks || '—'}</Text>
-                </View>
-              </View>
-            ) : null}
-          </View>
-        ) : null}
-
-        {/* ── Name / Date fields ── */}
-        {questionLayout.showDateNameFields ? (
-          <View style={{ flexDirection: 'row', marginBottom: 10 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginRight: 18 }}>
-              <Text style={{ fontSize: fontSizes.metaRow }}>Name: </Text>
-              <View style={{ width: 110, borderBottomWidth: 0.75, borderBottomColor: '#000', height: 11 }} />
+            <View
+              style={{
+                flex: 1,
+                paddingLeft: 12,
+                borderLeftWidth: 0.75,
+                borderLeftColor: '#999999',
+                borderStyle: 'dashed',
+              }}
+            >
+              <PdfBody metadata={metadata} questions={questions} config={config} />
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginRight: 18 }}>
-              <Text style={{ fontSize: fontSizes.metaRow }}>Date: </Text>
-              <View style={{ width: 70, borderBottomWidth: 0.75, borderBottomColor: '#000', height: 11 }} />
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
-              <Text style={{ fontSize: fontSizes.metaRow }}>Roll No.: </Text>
-              <View style={{ width: 55, borderBottomWidth: 0.75, borderBottomColor: '#000', height: 11 }} />
-            </View>
-          </View>
-        ) : null}
-
-        {/* ── Instructions ── */}
-        {config.instructions ? (
-          <Text
-            style={{
-              textAlign: 'center',
-              fontStyle: 'italic',
-              fontFamily: 'Times-BoldItalic',
-              fontSize: fontSizes.instructions,
-              marginBottom: 10,
-            }}
-          >
-            {config.instructions}
-          </Text>
-        ) : null}
-
-        {/* ── Questions ── */}
-        {questionLayout.columns === 2 ? (
-          <View>
-            {chunkArray(questions, 2).map((row, ri) => (
-              <View key={ri} style={{ flexDirection: 'row', marginBottom: questionStyle.spacing }}>
-                {row.map((q, ci) => {
-                  const idx = ri * 2 + ci
-                  return (
-                    <View key={q.id || idx} style={{ flex: 1, marginRight: ci === 0 ? 7 : 0, marginLeft: ci === 1 ? 7 : 0 }}>
-                      <PdfQuestion q={q} idx={idx} config={config} />
-                    </View>
-                  )
-                })}
-              </View>
-            ))}
           </View>
         ) : (
-          <View>
-            {questions.map((q, idx) => (
-              <View key={q.id || idx} style={{ marginBottom: questionStyle.spacing }}>
-                <PdfQuestion q={q} idx={idx} config={config} />
-              </View>
-            ))}
-          </View>
+          <PdfBody metadata={metadata} questions={questions} config={config} />
         )}
-
-        {/* ── Footer ── */}
-        {config.footerText ? (
-          <Text
-            style={{
-              marginTop: 16,
-              fontSize: fontSizes.footer,
-              textAlign: 'center',
-              fontStyle: 'italic',
-              color: '#555555',
-            }}
-          >
-            {config.footerText}
-          </Text>
-        ) : null}
       </Page>
     </Document>
   )

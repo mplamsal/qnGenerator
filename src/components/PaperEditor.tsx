@@ -19,9 +19,15 @@ export default function PaperEditor() {
 
   const [templateId, setTemplateId] = useState('exam');
   const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
-  const [templateDraft, setTemplateDraft] = useState({
+  const [templateDraft, setTemplateDraft] = useState<{
+    name: string;
+    description: string;
+    orientation: 'portrait' | 'landscape';
+    config: typeof DEFAULT_TEMPLATE_CONFIG;
+  }>({
     name: '',
     description: '',
+    orientation: 'portrait',
     config: DEFAULT_TEMPLATE_CONFIG,
   });
   const [editingTemplate, setEditingTemplate] = useState<SavedTemplate | null>(null);
@@ -97,20 +103,25 @@ export default function PaperEditor() {
 
   const openNewTemplateEditor = () => {
     setEditingTemplate(null);
-    setTemplateDraft({ name: '', description: '', config: DEFAULT_TEMPLATE_CONFIG });
+    setTemplateDraft({ name: '', description: '', orientation: 'portrait', config: DEFAULT_TEMPLATE_CONFIG });
     setTemplateEditorOpen(true);
   };
 
   const handleEditTemplate = (template: SavedTemplate) => {
     setEditingTemplate(template);
-    setTemplateDraft({ name: template.name, description: template.description ?? '', config: template.config });
+    setTemplateDraft({
+      name: template.name,
+      description: template.description ?? '',
+      orientation: template.orientation ?? 'portrait',
+      config: template.config,
+    });
     setTemplateEditorOpen(true);
   };
 
   const handleCancelTemplateEditor = () => {
     setTemplateEditorOpen(false);
     setEditingTemplate(null);
-    setTemplateDraft({ name: '', description: '', config: DEFAULT_TEMPLATE_CONFIG });
+    setTemplateDraft({ name: '', description: '', orientation: 'portrait', config: DEFAULT_TEMPLATE_CONFIG });
   };
 
   const handleSaveTemplate = async () => {
@@ -121,6 +132,7 @@ export default function PaperEditor() {
         templateId: editingTemplate?.id,
         name: templateDraft.name,
         description: templateDraft.description,
+        orientation: templateDraft.orientation,
         config: templateDraft.config,
         token: token ?? undefined,
         schoolId: user?.school_id,
@@ -138,7 +150,7 @@ export default function PaperEditor() {
       setTemplateId(saved.id);
       setTemplateEditorOpen(false);
       setEditingTemplate(null);
-      setTemplateDraft({ name: '', description: '', config: DEFAULT_TEMPLATE_CONFIG });
+      setTemplateDraft({ name: '', description: '', orientation: 'portrait', config: DEFAULT_TEMPLATE_CONFIG });
       alert('Template saved');
     } catch (err: any) {
       console.error(err);
@@ -229,9 +241,11 @@ export default function PaperEditor() {
           <TemplateEditor
             name={templateDraft.name}
             description={templateDraft.description}
+            orientation={templateDraft.orientation}
             config={templateDraft.config}
             onChangeName={(name) => setTemplateDraft((draft) => ({ ...draft, name }))}
             onChangeDescription={(description) => setTemplateDraft((draft) => ({ ...draft, description }))}
+            onChangeOrientation={(orientation) => setTemplateDraft((draft) => ({ ...draft, orientation }))}
             onChangeConfig={(config) => setTemplateDraft((draft) => ({ ...draft, config }))}
             onSave={handleSaveTemplate}
             onCancel={handleCancelTemplateEditor}
