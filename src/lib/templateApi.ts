@@ -1,13 +1,7 @@
 import { listTemplates as listLocalTemplates, saveTemplate as saveTemplateLocal } from './templateLocalStore'
-import type { TemplateConfig } from '../templates/types'
 
-export type SavedTemplate = {
-  id: string
-  name: string
-  description?: string
-  config: TemplateConfig
-  createdAt?: string
-}
+export type { SavedTemplate } from '../types/savedTemplate'
+import type { SavedTemplate } from '../types/savedTemplate'
 
 export async function fetchSavedTemplates(options?: { token?: string; schoolId?: string }) {
   try {

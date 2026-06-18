@@ -2,9 +2,9 @@ import type { TemplateDefinition, TemplateConfig, TemplateDataProps } from './ty
 import { TemplatePreviewRenderer, TemplatePdfRenderer } from './TemplateRenderer'
 import builtInTemplates from './data/templates.json'
 
-function createPreviewComponent(config: TemplateConfig) {
+function createPreviewComponent(config: TemplateConfig, orientation?: 'portrait' | 'landscape') {
   return function TemplatePreview({ metadata, questions }: TemplateDataProps) {
-    return <TemplatePreviewRenderer metadata={metadata} questions={questions} config={config} />
+    return <TemplatePreviewRenderer metadata={metadata} questions={questions} config={config} orientation={orientation} />
   }
 }
 
@@ -22,7 +22,7 @@ export function createTemplateDefinition(templateJson: any): TemplateDefinition 
     category: templateJson.category,
     orientation: templateJson.orientation,
     config: templateJson.config,
-    PreviewComponent: createPreviewComponent(templateJson.config),
+    PreviewComponent: createPreviewComponent(templateJson.config, templateJson.orientation),
     PdfDocument: createPdfComponent(templateJson.config, templateJson.orientation),
   }
 }

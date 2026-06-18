@@ -7,10 +7,10 @@ export type TemplateDataProps = {
 }
 
 export type TemplateMargins = {
-  top: number
-  right: number
-  bottom: number
-  left: number
+  top: number     // pt
+  right: number   // pt
+  bottom: number  // pt
+  left: number    // pt
 }
 
 export type TemplateHeaderConfig = {
@@ -21,18 +21,47 @@ export type TemplateHeaderConfig = {
   showMetaRow: boolean
 }
 
+export type TemplateHeaderStyle = {
+  showLogo: boolean
+  borderStyle: 'box' | 'bottom-line' | 'none'
+  paddingVertical: number    // pt
+  paddingHorizontal: number  // pt
+}
+
+export type TemplateFontSizes = {
+  schoolName: number    // pt
+  examTitle: number     // pt
+  subjectLine: number   // pt
+  metaRow: number       // pt
+  instructions: number  // pt
+  questionText: number  // pt
+  mcqOption: number     // pt
+  footer: number        // pt
+}
+
 export type TemplateQuestionStyle = {
   showMarks: boolean
   numberingStyle: 'number' | 'letter'
-  spacing: number
+  spacing: number  // pt — vertical gap between questions
+}
+
+export type TemplateQuestionLayout = {
+  columns: 1 | 2
+  mcqColumns: 1 | 2 | 4
+  showAnswerLines: boolean
+  answerLineCount: number
+  showDateNameFields: boolean
 }
 
 export type TemplateConfig = {
   margins: TemplateMargins
   header: TemplateHeaderConfig
+  headerStyle: TemplateHeaderStyle
+  fontSizes: TemplateFontSizes
   instructions: string
   footerText: string
   questionStyle: TemplateQuestionStyle
+  questionLayout: TemplateQuestionLayout
 }
 
 export type TemplateDefinition = {

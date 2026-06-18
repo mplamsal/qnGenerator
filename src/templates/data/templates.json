@@ -6,7 +6,7 @@
     "category": "Terminal Exam",
     "orientation": "portrait",
     "config": {
-      "margins": { "top": 32, "right": 40, "bottom": 32, "left": 40 },
+      "margins": { "top": 54, "right": 56, "bottom": 54, "left": 56 },
       "header": {
         "enabled": true,
         "showSchoolName": true,
@@ -14,19 +14,68 @@
         "showSubjectLine": true,
         "showMetaRow": true
       },
+      "headerStyle": { "showLogo": true, "borderStyle": "box", "paddingVertical": 8, "paddingHorizontal": 12 },
+      "fontSizes": { "schoolName": 16, "examTitle": 13, "subjectLine": 12, "metaRow": 10, "instructions": 11, "questionText": 12, "mcqOption": 11, "footer": 9 },
       "instructions": "Answer all questions.",
       "footerText": "Good luck!",
-      "questionStyle": { "showMarks": true, "numberingStyle": "number", "spacing": 12 }
+      "questionStyle": { "showMarks": true, "numberingStyle": "number", "spacing": 10 },
+      "questionLayout": { "columns": 1, "mcqColumns": 2, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": false }
+    }
+  },
+  {
+    "id": "practice-test",
+    "name": "Practice Test",
+    "description": "Practice test with numbered questions and answer blanks for self-assessment.",
+    "category": "Terminal Exam",
+    "orientation": "portrait",
+    "config": {
+      "margins": { "top": 48, "right": 54, "bottom": 48, "left": 54 },
+      "header": {
+        "enabled": true,
+        "showSchoolName": true,
+        "showExamTitle": true,
+        "showSubjectLine": true,
+        "showMetaRow": true
+      },
+      "headerStyle": { "showLogo": true, "borderStyle": "bottom-line", "paddingVertical": 8, "paddingHorizontal": 0 },
+      "fontSizes": { "schoolName": 15, "examTitle": 13, "subjectLine": 11, "metaRow": 10, "instructions": 10, "questionText": 12, "mcqOption": 11, "footer": 9 },
+      "instructions": "Answer all questions. Show all working clearly.",
+      "footerText": "Practice makes perfect!",
+      "questionStyle": { "showMarks": true, "numberingStyle": "number", "spacing": 8 },
+      "questionLayout": { "columns": 1, "mcqColumns": 2, "showAnswerLines": true, "answerLineCount": 3, "showDateNameFields": true }
+    }
+  },
+  {
+    "id": "essay-format",
+    "name": "Essay / Long Answer",
+    "description": "Long answer and essay questions with generous spacing for written responses.",
+    "category": "Terminal Exam",
+    "orientation": "portrait",
+    "config": {
+      "margins": { "top": 56, "right": 70, "bottom": 56, "left": 70 },
+      "header": {
+        "enabled": true,
+        "showSchoolName": true,
+        "showExamTitle": true,
+        "showSubjectLine": true,
+        "showMetaRow": true
+      },
+      "headerStyle": { "showLogo": false, "borderStyle": "box", "paddingVertical": 10, "paddingHorizontal": 14 },
+      "fontSizes": { "schoolName": 16, "examTitle": 14, "subjectLine": 12, "metaRow": 10, "instructions": 11, "questionText": 12, "mcqOption": 11, "footer": 9 },
+      "instructions": "Write legibly. Answer all sections in full sentences.",
+      "footerText": "Review your work before submitting.",
+      "questionStyle": { "showMarks": true, "numberingStyle": "number", "spacing": 14 },
+      "questionLayout": { "columns": 1, "mcqColumns": 1, "showAnswerLines": true, "answerLineCount": 8, "showDateNameFields": true }
     }
   },
   {
     "id": "unit-test",
     "name": "Unit Test Paper",
-    "description": "Compact layout for short unit tests and quizzes.",
+    "description": "Compact two-column layout for short unit tests and quizzes.",
     "category": "Unit Test",
     "orientation": "portrait",
     "config": {
-      "margins": { "top": 28, "right": 32, "bottom": 28, "left": 32 },
+      "margins": { "top": 36, "right": 42, "bottom": 36, "left": 42 },
       "header": {
         "enabled": true,
         "showSchoolName": true,
@@ -34,19 +83,91 @@
         "showSubjectLine": false,
         "showMetaRow": true
       },
+      "headerStyle": { "showLogo": true, "borderStyle": "none", "paddingVertical": 0, "paddingHorizontal": 0 },
+      "fontSizes": { "schoolName": 15, "examTitle": 13, "subjectLine": 11, "metaRow": 10, "instructions": 10, "questionText": 11, "mcqOption": 10, "footer": 9 },
       "instructions": "Choose the correct answers and show all working clearly.",
       "footerText": "Check your answers before submitting.",
-      "questionStyle": { "showMarks": true, "numberingStyle": "letter", "spacing": 10 }
+      "questionStyle": { "showMarks": true, "numberingStyle": "letter", "spacing": 8 },
+      "questionLayout": { "columns": 2, "mcqColumns": 2, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": false }
+    }
+  },
+  {
+    "id": "mcq-sheet",
+    "name": "MCQ Answer Sheet",
+    "description": "Multiple choice questions with four lettered options across the page.",
+    "category": "Unit Test",
+    "orientation": "portrait",
+    "config": {
+      "margins": { "top": 36, "right": 42, "bottom": 36, "left": 42 },
+      "header": {
+        "enabled": true,
+        "showSchoolName": true,
+        "showExamTitle": true,
+        "showSubjectLine": true,
+        "showMetaRow": true
+      },
+      "headerStyle": { "showLogo": true, "borderStyle": "box", "paddingVertical": 8, "paddingHorizontal": 12 },
+      "fontSizes": { "schoolName": 15, "examTitle": 12, "subjectLine": 11, "metaRow": 10, "instructions": 10, "questionText": 11, "mcqOption": 10, "footer": 9 },
+      "instructions": "Circle the correct option for each question.",
+      "footerText": "Do not write outside the answer area.",
+      "questionStyle": { "showMarks": false, "numberingStyle": "number", "spacing": 6 },
+      "questionLayout": { "columns": 1, "mcqColumns": 4, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": true }
+    }
+  },
+  {
+    "id": "true-false",
+    "name": "True / False Quiz",
+    "description": "Quick true/false format quiz for formative assessment and warm-ups.",
+    "category": "Unit Test",
+    "orientation": "portrait",
+    "config": {
+      "margins": { "top": 36, "right": 42, "bottom": 36, "left": 42 },
+      "header": {
+        "enabled": true,
+        "showSchoolName": false,
+        "showExamTitle": true,
+        "showSubjectLine": true,
+        "showMetaRow": true
+      },
+      "headerStyle": { "showLogo": false, "borderStyle": "bottom-line", "paddingVertical": 6, "paddingHorizontal": 0 },
+      "fontSizes": { "schoolName": 14, "examTitle": 14, "subjectLine": 12, "metaRow": 10, "instructions": 10, "questionText": 12, "mcqOption": 11, "footer": 9 },
+      "instructions": "Write TRUE or FALSE in the blank next to each statement.",
+      "footerText": "Check your answers.",
+      "questionStyle": { "showMarks": false, "numberingStyle": "number", "spacing": 5 },
+      "questionLayout": { "columns": 1, "mcqColumns": 1, "showAnswerLines": true, "answerLineCount": 1, "showDateNameFields": false }
+    }
+  },
+  {
+    "id": "fill-blank",
+    "name": "Fill in the Blank",
+    "description": "Sentences with blanks for vocabulary, concept recall, and completion tasks.",
+    "category": "Unit Test",
+    "orientation": "portrait",
+    "config": {
+      "margins": { "top": 48, "right": 56, "bottom": 48, "left": 56 },
+      "header": {
+        "enabled": true,
+        "showSchoolName": false,
+        "showExamTitle": true,
+        "showSubjectLine": true,
+        "showMetaRow": true
+      },
+      "headerStyle": { "showLogo": false, "borderStyle": "box", "paddingVertical": 8, "paddingHorizontal": 12 },
+      "fontSizes": { "schoolName": 15, "examTitle": 14, "subjectLine": 12, "metaRow": 10, "instructions": 10, "questionText": 12, "mcqOption": 11, "footer": 9 },
+      "instructions": "Fill in each blank with the correct word or phrase.",
+      "footerText": "Write clearly and neatly.",
+      "questionStyle": { "showMarks": false, "numberingStyle": "number", "spacing": 10 },
+      "questionLayout": { "columns": 1, "mcqColumns": 2, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": true }
     }
   },
   {
     "id": "landscape",
     "name": "Landscape Format",
-    "description": "Wide landscape page format for tables, charts, or extended questions.",
+    "description": "Wide landscape page with two-column questions for tables, charts, or extended questions.",
     "category": "Special Format",
     "orientation": "landscape",
     "config": {
-      "margins": { "top": 24, "right": 24, "bottom": 24, "left": 24 },
+      "margins": { "top": 28, "right": 28, "bottom": 28, "left": 28 },
       "header": {
         "enabled": true,
         "showSchoolName": true,
@@ -54,9 +175,12 @@
         "showSubjectLine": true,
         "showMetaRow": false
       },
+      "headerStyle": { "showLogo": true, "borderStyle": "box", "paddingVertical": 6, "paddingHorizontal": 10 },
+      "fontSizes": { "schoolName": 14, "examTitle": 12, "subjectLine": 11, "metaRow": 10, "instructions": 10, "questionText": 11, "mcqOption": 10, "footer": 9 },
       "instructions": "Answer all questions in the spaces provided.",
       "footerText": "Use the full width of the page.",
-      "questionStyle": { "showMarks": false, "numberingStyle": "number", "spacing": 14 }
+      "questionStyle": { "showMarks": false, "numberingStyle": "number", "spacing": 8 },
+      "questionLayout": { "columns": 2, "mcqColumns": 4, "showAnswerLines": false, "answerLineCount": 0, "showDateNameFields": false }
     }
   }
 ]

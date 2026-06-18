@@ -3,26 +3,13 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 import MathText from '../lib/math'
 import { formatExamTitle, formatSetLabel, mcqOptionLabel } from '../lib/documentFormat'
 import type { PaperMetadata, Question } from '../types/paper'
-import type { TemplateDataProps } from './types'
-import type { TemplateConfig } from './types'
+import type { TemplateDataProps, TemplateConfig } from './types'
+import type { SavedTemplate } from '../types/savedTemplate'
 
-export type SavedTemplate = {
-  id: string
-  name: string
-  description?: string
-  category?: string
-  orientation?: 'portrait' | 'landscape'
-  config: TemplateConfig
-  createdAt?: string
-}
+export type { SavedTemplate }
 
 export const DEFAULT_TEMPLATE_CONFIG: TemplateConfig = {
-  margins: {
-    top: 32,
-    right: 40,
-    bottom: 32,
-    left: 40,
-  },
+  margins: { top: 54, right: 56, bottom: 54, left: 56 },
   header: {
     enabled: true,
     showSchoolName: true,
@@ -30,13 +17,12 @@ export const DEFAULT_TEMPLATE_CONFIG: TemplateConfig = {
     showSubjectLine: true,
     showMetaRow: true,
   },
+  headerStyle: { showLogo: true, borderStyle: 'box', paddingVertical: 8, paddingHorizontal: 12 },
+  fontSizes: { schoolName: 16, examTitle: 13, subjectLine: 12, metaRow: 10, instructions: 11, questionText: 12, mcqOption: 11, footer: 9 },
   instructions: 'Attempt all the questions.',
   footerText: 'Good luck! Read each question carefully.',
-  questionStyle: {
-    showMarks: true,
-    numberingStyle: 'number',
-    spacing: 12,
-  },
+  questionStyle: { showMarks: true, numberingStyle: 'number', spacing: 10 },
+  questionLayout: { columns: 1, mcqColumns: 2, showAnswerLines: false, answerLineCount: 0, showDateNameFields: false },
 }
 
 export function createSavedTemplateDefinition(template: SavedTemplate) {

@@ -14,7 +14,8 @@ export function createTemplatePdfDocument(
 }
 
 export async function createPdfBlob(documentElement: ReactElement): Promise<Blob> {
-  const blob = await pdf(documentElement).toBlob()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const blob = await pdf(documentElement as any).toBlob()
   if (!blob) {
     throw new Error('Unable to generate PDF blob')
   }
