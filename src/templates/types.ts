@@ -64,6 +64,10 @@ export type TemplateLayout = {
   headerSpacing: number
   // pt — gap below the header and instructions blocks.
   sectionSpacing: number
+  // pt — horizontal gap between question columns and between twin tear-off halves.
+  columnGap: number
+  // Divider drawn between the two twin tear-off copies (the line you cut along).
+  cutLine: 'dashed' | 'solid' | 'none'
 }
 
 export type TemplateConfig = {
