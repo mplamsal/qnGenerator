@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import { savePaper, updatePaper as localUpdatePaper } from '../lib/localStore';
+import { savePaper, updatePaper as localUpdatePaper, getPaper } from '../lib/localStore';
 import DocumentPreview from './DocumentPreview';
 import PDFPreview from './PDFPreview';
 import TemplateSelector from './TemplateSelector';
@@ -9,7 +10,7 @@ import TemplateEditor from './TemplateEditor';
 import QuestionEditor from './QuestionEditor';
 import { getTemplateById, templates as builtInTemplates } from '../templates';
 import { createQuestion, DEFAULT_METADATA, type PaperMetadata, type Question } from '../types/paper';
-import { fetchSavedTemplates, saveSavedTemplate, type SavedTemplate } from '../lib/templateApi';
+import { fetchSavedTemplates, saveSavedTemplate, saveSavedTemplateAndMirrorLocal, type SavedTemplate } from '../lib/templateApi';
 import { DEFAULT_TEMPLATE_CONFIG, createSavedTemplateDefinition } from '../templates/SavedTemplateRenderer';
 
 // --- Main Component ---
@@ -91,6 +92,28 @@ export default function PaperEditor() {
     loadTemplates();
   }, [token, user?.school_id]);
 
+  // Respect templateId query param (so links from landing/nav can open editor for a saved template)
+  const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tid = params.get('templateId');
+    if (tid) setTemplateId(tid);
+  }, [location.search]);
+
+  // Load a saved paper from URL paperId param
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const pid = params.get('paperId');
+    if (pid) {
+      const paper = getPaper(pid);
+      if (paper) {
+        setPaperId(pid);
+        setMetadata(paper.metadata);
+        setQuestions(paper.questions);
+      }
+    }
+  }, []);
+
   const savedTemplateDefinitions = useMemo(
     () => savedTemplates.map((template) => createSavedTemplateDefinition(template)),
     [savedTemplates]
@@ -128,7 +151,7 @@ export default function PaperEditor() {
     if (!templateDraft.name.trim()) return alert('Please enter a template name.');
     setTemplateSaving(true);
     try {
-      const saved = await saveSavedTemplate({
+      const saved = await saveSavedTemplateAndMirrorLocal({
         templateId: editingTemplate?.id,
         name: templateDraft.name,
         description: templateDraft.description,
@@ -194,7 +217,6 @@ export default function PaperEditor() {
 
   // --- Save / Submit ---
   const handleSaveDraft = async () => {
-    if (!user) return alert('Not signed in');
     setSaving(true);
     try {
       const meta = metadata;
@@ -204,7 +226,7 @@ export default function PaperEditor() {
       } else {
         localUpdatePaper(paperId, { metadata: meta, questions });
       }
-      alert('Draft saved');
+      alert('Draft saved to local storage');
     } catch (err: any) {
       console.error(err);
       alert(err.message || 'Save failed');
@@ -228,8 +250,19 @@ export default function PaperEditor() {
 
   // --- Render ---
   return (
-    <div ref={splitPanelRef} className={`split-panel${splitterActive ? ' is-dragging' : ''}`}>
-      <div className="panel-left" style={{ flex: `0 0 ${leftWidth}%` }}>
+    <div className="editor-layout">
+      <div className="editor-topbar no-print">
+        <a href="/" className="editor-back-btn">← Home</a>
+        <div className="editor-topbar-divider" />
+        <span className="editor-docname">{metadata.subject || 'New Exam Paper'}</span>
+        {activeTemplate && <span className="editor-template-badge">{activeTemplate.name}</span>}
+        <div className="editor-topbar-spacer" />
+        <button className="btn btn-primary btn-sm" onClick={handleSaveDraft} disabled={saving}>
+          {saving ? 'Saving…' : '💾 Save Draft'}
+        </button>
+      </div>
+      <div ref={splitPanelRef} className="editor-body">
+      <div className="editor-left" style={{ width: `${leftWidth}%` }}>
         <TemplateSelector
           value={templateId}
           onChange={setTemplateId}
@@ -382,9 +415,6 @@ export default function PaperEditor() {
 
         {/* Actions */}
         <div className="card no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: 0 }}>
-          <button className="btn btn-primary" onClick={handleSaveDraft} disabled={saving}>
-            {saving ? 'Saving...' : '💾 Save Draft'}
-          </button>
           <button className="btn btn-success" onClick={handleSubmit}>
             📤 Submit
           </button>
@@ -403,29 +433,28 @@ export default function PaperEditor() {
       </div>
 
       <div
-        className={`splitter${splitterActive ? ' active' : ''}`}
+        className={`editor-splitter${splitterActive ? ' active' : ''}`}
         onMouseDown={handleSplitterMouseDown}
         role="separator"
         aria-orientation="vertical"
         aria-valuenow={Math.round(leftWidth)}
       >
-        <div className="grip">
+        <div className="splitter-grip">
           <span /><span /><span />
         </div>
       </div>
 
-      <div className="panel-right">
-        <div className="preview-card preview-card-fill">
+      <div className="editor-right">
+        <div className="editor-preview-wrap">
           <DocumentPreview template={activeTemplate} metadata={metadata} questions={questions} />
         </div>
-        <div className="preview-card no-print preview-card-compact">
+        <div className="no-print" style={{ flexShrink: 0 }}>
           <div className="preview-toolbar">
             <span>🖨️ PDF Preview</span>
           </div>
-          <div className="preview-body preview-body-compact">
-            <PDFPreview template={activeTemplate} metadata={metadata} questions={questions} />
-          </div>
+          <PDFPreview template={activeTemplate} metadata={metadata} questions={questions} />
         </div>
+      </div>
       </div>
     </div>
   );

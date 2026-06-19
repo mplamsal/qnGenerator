@@ -44,7 +44,7 @@
       },
       "questionLayout": {
         "columns": 1,
-        "mcqColumns": 2,
+        "mcqColumns": 1,
         "showAnswerLines": false,
         "answerLineCount": 0,
         "showDateNameFields": false

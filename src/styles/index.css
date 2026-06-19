@@ -73,6 +73,15 @@ body,
   background: #e8f0fe;
 }
 
+.btn-success {
+  background: #188038;
+  color: #fff;
+}
+.btn-success:hover:not(:disabled) {
+  background: #0f5f2a;
+  box-shadow: 0 2px 8px rgba(24, 128, 56, 0.28);
+}
+
 /* ===== UTILITIES ===== */
 .text-muted { color: #64748b; }
 .text-sm { font-size: 13px; }

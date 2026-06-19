@@ -35,6 +35,10 @@ export function ExamDocumentHeader({ metadata }: { metadata: Partial<PaperMetada
   )
 }
 
+function marksLabel(q: Question): string {
+  return q.marks_expression ? `[${q.marks_expression}]` : q.marks ? `[${q.marks}]` : ''
+}
+
 export function ExamQuestionsBody({ questions }: { questions: Question[] }) {
   if (!questions.length) {
     return <p className="muted">No questions yet — add questions on the left.</p>
@@ -46,10 +50,22 @@ export function ExamQuestionsBody({ questions }: { questions: Question[] }) {
         <div key={q.id || idx} className="doc-question-block">
           <div className="question-item">
             <div className="q-text">
-              <strong>{idx + 1}.</strong> {q.question_text || '…'}
-              {q.marks ? <span className="q-marks"> [{q.marks}]</span> : null}
+              <strong>{idx + 1}. {q.question_text || '…'}</strong>
+              {marksLabel(q) ? <span className="q-marks"> {marksLabel(q)}</span> : null}
             </div>
           </div>
+
+          {q.sub_questions && q.sub_questions.length > 0 && (
+            <ul className={`sub-questions-list${q.sub_questions_layout === '2col' ? ' sub-questions-2col' : ''}`}>
+              {q.sub_questions.map((sq, si) => (
+                <li key={sq.id || si} className="sub-question-item">
+                  <span className="sub-question-label">({String.fromCharCode(97 + si)})</span>
+                  <span>{sq.text || '………………'}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
           {q.type === 'MCQ' && q.options && q.options.length > 0 && (
             <ul className="mcq-options-list">
               {q.options.map((opt, oi) =>

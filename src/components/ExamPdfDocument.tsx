@@ -29,31 +29,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
-  schoolName: { fontSize: 14, fontWeight: 700 },
-  examTitle: { fontSize: 12, fontWeight: 700, marginTop: 2 },
-  subjectLine: { fontSize: 12, fontWeight: 700, marginTop: 2 },
+  schoolName: { fontSize: 14, fontFamily: 'Times-Bold' },
+  examTitle: { fontSize: 12, fontFamily: 'Times-Bold', marginTop: 2 },
+  subjectLine: { fontSize: 12, fontFamily: 'Times-Bold', marginTop: 2 },
   headerBottom: {
     flexDirection: 'row',
     marginTop: 6,
   },
   metaLeft: { width: '33%', fontSize: 11 },
-  setLine: { width: '34%', fontSize: 12, fontWeight: 700, textAlign: 'center' },
+  setLine: { width: '34%', fontSize: 12, fontFamily: 'Times-Bold', textAlign: 'center' },
   metaRight: { width: '33%', fontSize: 11, textAlign: 'right' },
   instructions: {
     fontStyle: 'italic',
     textAlign: 'center',
     marginBottom: 10,
-    fontWeight: 'bold',
+    fontFamily: 'Times-BoldItalic',
   },
   questionBlock: { marginBottom: 8 },
   questionLine: { flexDirection: 'row', marginBottom: 2 },
-  questionText: { flex: 1 },
-  questionMarks: { marginLeft: 4, fontStyle: 'italic' },
+  questionText: { flex: 1, fontFamily: 'Times-Bold' },
+  questionMarks: { marginLeft: 4, fontStyle: 'italic', fontFamily: 'Times-Roman' },
+  subList: { marginLeft: 18, marginTop: 2 },
+  subRow2col: { flexDirection: 'row', marginBottom: 1 },
+  subItem: { flexDirection: 'row', marginBottom: 1 },
+  subItemHalf: { flex: 1, flexDirection: 'row', marginBottom: 1 },
+  subBullet: { width: 18 },
+  subText: { flex: 1 },
   mcqList: { marginLeft: 18, marginTop: 2 },
   mcqOption: { flexDirection: 'row', marginBottom: 1 },
   mcqBullet: { width: 18 },
   mcqText: { flex: 1 },
 })
+
+function marksLabel(q: Question): string {
+  return q.marks_expression ? `[${q.marks_expression}]` : q.marks ? `[${q.marks}]` : ''
+}
 
 export function ExamPdfDocument({
   metadata = {},
@@ -95,28 +105,67 @@ export function ExamPdfDocument({
         <Text style={styles.instructions}>Attempt all the questions.</Text>
 
         <View>
-          {questions.map((q, idx) => (
-            <View key={q.id || idx} style={styles.questionBlock}>
-              <View style={styles.questionLine}>
-                <Text style={styles.questionText}>
-                  {idx + 1}. {q.question_text || '…'}
-                </Text>
-                {q.marks ? <Text style={styles.questionMarks}>[{q.marks}]</Text> : null}
-              </View>
-              {q.type === 'MCQ' && q.options && q.options.length > 0 && (
-                <View style={styles.mcqList}>
-                  {q.options.map((opt, oi) =>
-                    opt.trim() || q.options!.length <= 4 ? (
-                      <View key={oi} style={styles.mcqOption}>
-                        <Text style={styles.mcqBullet}>({mcqOptionLabel(oi)})</Text>
-                        <Text style={styles.mcqText}>{opt || '………………'}</Text>
-                      </View>
-                    ) : null
-                  )}
+          {questions.map((q, idx) => {
+            const ml = marksLabel(q)
+            const subQs = q.sub_questions ?? []
+            const is2col = q.sub_questions_layout === '2col'
+            return (
+              <View key={q.id || idx} style={styles.questionBlock}>
+                <View style={styles.questionLine}>
+                  <Text style={styles.questionText}>
+                    {idx + 1}. {q.question_text || '…'}
+                  </Text>
+                  {ml ? <Text style={styles.questionMarks}>{ml}</Text> : null}
                 </View>
-              )}
-            </View>
-          ))}
+
+                {subQs.length > 0 && (
+                  <View style={styles.subList}>
+                    {is2col ? (
+                      // Pair up into rows of 2
+                      Array.from({ length: Math.ceil(subQs.length / 2) }).map((_, ri) => {
+                        const left = subQs[ri * 2]
+                        const right = subQs[ri * 2 + 1]
+                        return (
+                          <View key={ri} style={styles.subRow2col}>
+                            <View style={styles.subItemHalf}>
+                              <Text style={styles.subBullet}>({String.fromCharCode(97 + ri * 2)})</Text>
+                              <Text style={styles.subText}>{left?.text || '………………'}</Text>
+                            </View>
+                            {right ? (
+                              <View style={styles.subItemHalf}>
+                                <Text style={styles.subBullet}>({String.fromCharCode(97 + ri * 2 + 1)})</Text>
+                                <Text style={styles.subText}>{right.text || '………………'}</Text>
+                              </View>
+                            ) : <View style={styles.subItemHalf} />}
+                          </View>
+                        )
+                      })
+                    ) : (
+                      subQs.map((sq, si) => (
+                        <View key={sq.id || si} style={styles.subItem}>
+                          <Text style={styles.subBullet}>({String.fromCharCode(97 + si)})</Text>
+                          <Text style={styles.subText}>{sq.text || '………………'}</Text>
+                        </View>
+                      ))
+                    )}
+                  </View>
+                )}
+
+                {q.type === 'MCQ' && q.options && q.options.length > 0 && (
+                  <View style={styles.mcqList}>
+                    {q.options.map((opt, oi) =>
+                      opt.trim() || q.options!.length <= 4 ? (
+                        <View key={oi} style={styles.mcqOption}>
+                          <Text style={styles.mcqBullet}>({mcqOptionLabel(oi)})</Text>
+                          <Text style={styles.mcqText}>{opt || '………………'}</Text>
+                        </View>
+                      ) : null
+                    )}
+                  </View>
+                )}
+              </View>
+            )
+          })}
         </View>
       </Page>
     </Document>

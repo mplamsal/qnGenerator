@@ -43,12 +43,12 @@ export function saveTemplate(payload: { templateId?: string; name: string; descr
       }
       items[existingIndex] = updated
       saveAll(items)
+      try { window.dispatchEvent(new CustomEvent('examforge:templates-changed', { detail: items })) } catch (e) {}
       return updated
     }
   }
-
   const template = {
-    id: uuidv4(),
+    id: payload.templateId ?? uuidv4(),
     name: payload.name,
     description: payload.description,
     orientation: payload.orientation,
@@ -57,5 +57,6 @@ export function saveTemplate(payload: { templateId?: string; name: string; descr
   }
   items.unshift(template)
   saveAll(items)
+  try { window.dispatchEvent(new CustomEvent('examforge:templates-changed', { detail: items })) } catch (e) {}
   return template
 }

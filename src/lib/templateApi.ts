@@ -80,3 +80,29 @@ export async function saveSavedTemplate(payload: {
     }) as SavedTemplate
   }
 }
+
+// Ensure that successful server saves are also mirrored locally so the UI can show them offline
+export async function saveSavedTemplateAndMirrorLocal(payload: {
+  templateId?: string
+  name: string
+  description?: string
+  orientation?: 'portrait' | 'landscape'
+  config: TemplateConfig
+  token?: string
+  schoolId?: string
+}) {
+  const saved = await saveSavedTemplate(payload)
+  try {
+    // Mirror into local store using server id when available
+    saveTemplateLocal({
+      templateId: (saved as any).id,
+      name: saved.name,
+      description: saved.description,
+      orientation: saved.orientation,
+      config: saved.config,
+    })
+  } catch (e) {
+    // ignore
+  }
+  return saved
+}

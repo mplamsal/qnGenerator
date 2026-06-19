@@ -5,6 +5,7 @@ import TeacherDashboard from './pages/TeacherDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import Landing from './pages/Landing'
 import TemplateViewer from './pages/TemplateViewer'
+import PaperEditor from './components/PaperEditor'
 import { useStore } from './store/useStore'
 
 export default function Router(){
@@ -15,6 +16,7 @@ export default function Router(){
       <Route path="/teacher" element={<TeacherDashboard/>} />
       <Route path="/admin" element={<AdminDashboard/>} />
       <Route path="/template" element={<TemplateViewer/>} />
+      <Route path="/paper" element={<PaperEditor/>} />
       <Route path="/" element={<Landing/>} />
     </Routes>
   )

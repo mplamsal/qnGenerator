@@ -20,6 +20,7 @@ function loadAll(): StoredPaper[]{
 
 function saveAll(items: StoredPaper[]){
   localStorage.setItem(KEY, JSON.stringify(items))
+  try { window.dispatchEvent(new CustomEvent('examforge:papers-changed', { detail: items })) } catch (e) {}
 }
 
 export function savePaper(payload: { metadata:any, questions:any[] }){

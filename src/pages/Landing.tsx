@@ -1,5 +1,8 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { listTemplates } from '../lib/templateLocalStore'
+import { listPapers } from '../lib/localStore'
 import { builtInTemplateDefinitions } from '../templates/templateReader'
 import type { TemplateDefinition } from '../templates/types'
 
@@ -49,6 +52,37 @@ function TemplateCard({ template, onClick }: { template: TemplateDefinition; onC
 export default function Landing() {
   const navigate = useNavigate()
 
+  const [savedTemplates, setSavedTemplates] = useState<any[]>([])
+  const [savedPapers, setSavedPapers] = useState<any[]>([])
+
+  useEffect(() => {
+    try {
+      const items = listTemplates()
+      setSavedTemplates(items)
+    } catch (e) {
+      setSavedTemplates([])
+    }
+    try {
+      const papers = listPapers()
+      setSavedPapers(papers)
+    } catch (e) {
+      setSavedPapers([])
+    }
+
+    const onTemplatesChange = () => {
+      try { setSavedTemplates(listTemplates()) } catch (e) { /* ignore */ }
+    }
+    const onPapersChange = () => {
+      try { setSavedPapers(listPapers()) } catch (e) { /* ignore */ }
+    }
+    window.addEventListener('examforge:templates-changed', onTemplatesChange as EventListener)
+    window.addEventListener('examforge:papers-changed', onPapersChange as EventListener)
+    return () => {
+      window.removeEventListener('examforge:templates-changed', onTemplatesChange as EventListener)
+      window.removeEventListener('examforge:papers-changed', onPapersChange as EventListener)
+    }
+  }, [])
+
   const grouped = builtInTemplateDefinitions.reduce<Record<string, TemplateDefinition[]>>((acc, t) => {
     const cat = t.category || 'Other'
     if (!acc[cat]) acc[cat] = []
@@ -73,12 +107,62 @@ export default function Landing() {
           <span className="gdocs-navbar-title">ExamForge</span>
         </div>
         <div className="gdocs-navbar-right">
-          <div className="gdocs-avatar">E</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {savedTemplates.length > 0 ? (
+              <div style={{ background: '#e8f0fe', padding: '6px 10px', borderRadius: 6, display: 'flex', gap: 8 }}>
+                {savedTemplates.slice(0,6).map((t) => (
+                  <button key={t.id} type="button" className="btn btn-ghost btn-sm" onClick={() => navigate(`/paper?templateId=${t.id}`)}>
+                    {t.name}
+                  </button>
+                ))}
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigate('/paper')}>Manage</button>
+              </div>
+            ) : null}
+            <div className="gdocs-avatar">E</div>
+          </div>
         </div>
       </div>
 
       {/* Main content */}
       <div className="gdocs-main">
+        {/* Saved Papers Section */}
+        {savedPapers.length > 0 && (
+          <div className="gdocs-start-section">
+            <div className="gdocs-start-heading">📋 Continue your work</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+              {savedPapers.map((paper) => (
+                <button
+                  key={paper.id}
+                  type="button"
+                  onClick={() => navigate(`/paper?paperId=${paper.id}`)}
+                  style={{
+                    background: '#fff',
+                    border: '1px solid #d0d0d0',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)')}
+                  onMouseOut={(e) => (e.currentTarget.style.boxShadow = 'none')}
+                >
+                  <div style={{ fontWeight: 600, marginBottom: '4px' }}>{paper.metadata?.subject || 'Untitled'}</div>
+                  <div style={{ fontSize: '12px', color: '#666' }}>
+                    {paper.metadata?.grade} • {paper.metadata?.examType}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#999', marginTop: '8px' }}>
+                    {paper.questions?.length || 0} questions
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#bbb', marginTop: '4px' }}>
+                    {new Date(paper.createdAt).toLocaleDateString()}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="gdocs-start-section">
           <div className="gdocs-start-heading">Start a new exam paper</div>
 
@@ -90,7 +174,7 @@ export default function Landing() {
                   <TemplateCard
                     key={t.id}
                     template={t}
-                    onClick={() => navigate(`/template?templateId=${t.id}`)}
+                    onClick={() => navigate(`/paper?templateId=${t.id}`)}
                   />
                 ))}
               </div>

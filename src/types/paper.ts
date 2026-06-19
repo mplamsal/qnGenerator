@@ -2,12 +2,20 @@ import { v4 as uuidv4 } from 'uuid'
 
 export type QuestionType = 'MCQ' | 'Very Short' | 'Short' | 'Long'
 
+export type SubQuestion = {
+  id: string
+  text: string
+}
+
 export type Question = {
   id: string
   type: QuestionType
   question_text: string
   marks: number
+  marks_expression?: string
   options?: string[]
+  sub_questions?: SubQuestion[]
+  sub_questions_layout?: 'vertical' | '2col'
 }
 
 export type PaperMetadata = {
